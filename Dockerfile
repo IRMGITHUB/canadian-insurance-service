@@ -1,0 +1,18 @@
+# To build and run with Docker:
+
+FROM node:10.15.2-alpine
+
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+
+WORKDIR /home/node/app
+
+COPY package*.json ./
+
+USER node
+
+RUN npm install
+
+COPY --chown=node:node . .
+
+# RUN npm run start
+CMD ["npm", "run", "start", "at-poc.eastus2.cloudapp.azure.com"]

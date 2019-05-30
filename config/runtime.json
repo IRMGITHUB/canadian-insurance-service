@@ -1,0 +1,27 @@
+{
+	"env": "development",
+	"processname": "irm-art-tracker-service",
+	"logLevel": "trace",
+	"request": {
+		"size": "16mb"
+	},
+	"log4js": {
+		"replaceConsole": true,
+		"appenders": {
+			"console": { "type": "console"},
+			"datefile": { 
+				"type": "dateFile",
+				"filename": "./logs/art-tracker-${env}",
+				"pattern": "yyyy-MM-dd.log",
+				"alwaysIncludePattern": true,
+				"daysToKeep": 3,
+				"layout": {
+					"type": "colored"
+				}
+			}
+		},
+		"categories": {
+			"default": { "appenders": [ "console", "datefile" ], "level": "all" }
+		}
+	}
+}

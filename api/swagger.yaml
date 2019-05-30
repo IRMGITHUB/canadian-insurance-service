@@ -1,0 +1,2059 @@
+---
+swagger: "2.0"
+info:
+  description: "Defines Canadian Insurance-Mortgage POC REST services"
+  version: "1.0.0"
+  title: "Canadian Insurance-Mortgage"
+  contact:
+    email: "kumari.shweta@hcl.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "@@host-details@@"
+basePath: "/api"
+tags:
+- name: "Authentication"
+  description: "Managing Authentication"
+- name: "Bank"
+  description: "Managing Bank IP Notices"
+- name: "Service Provider"
+  description: "Managing IP Notices"
+- name: "Insurance Provider"
+  description: "Managing IP Notices"
+- name: "Auditor"
+  description: "Audit IP Notices"
+- name: "Transaction"
+  description: "Managing Transaction"
+schemes:
+- "http"
+paths:
+  
+  /authenticate:
+    options:
+      tags:
+      - "Authentication"
+      summary: "Authenticate user into the system"
+      description: "This service is used to Authenticate user"
+      operationId: "optionsMethodAuth"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "bad request"
+        404:
+          description: "not found"
+      x-swagger-router-controller: "userController" 
+    post:
+      tags:
+      - "Authentication"
+      summary: "Authenticate user into the system"
+      description: "This service is used to Authenticate user"
+      operationId: "authenticateUser"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "user object that needs for authenticate"
+        required: true
+        schema:
+          $ref: "#/definitions/user"
+      responses:
+        405:
+          description: "Invalid input"
+      x-swagger-router-controller: "userController"  
+  /validateToken:
+    options:
+      tags:
+      - "Authentication"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "optionsMethodValidateToken"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "bad request"
+        404:
+          description: "not found"
+      x-swagger-router-controller: "userController"
+    post:
+      tags:
+      - "Authentication"
+      summary: "Get the token validated"
+      description: "This service is used to validate teh token"
+      operationId: "validateToken"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Token to be added"
+        required: true
+        schema:
+          $ref: "#/definitions/validateTokenForPost"
+      responses:
+        200:
+          description: "Token is valid"
+        405:
+          description: "Invalid Token supplied"
+      x-swagger-router-controller: "userController" 
+  /findByPersona:
+    options:
+      tags:
+      - "Authentication"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "optionsMethodFindPersona"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "bad request"
+        404:
+          description: "not found"
+      x-swagger-router-controller: "userController" 
+    get:
+      tags:
+      - "Authentication"
+      summary: "Get user information by persona"
+      description: "This service is used to get user information by persona"
+      operationId: "findByPersona"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "persona"
+        in: "query"
+        description: "PersonaDetails "
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/getuserobject"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Audit not found"
+      x-swagger-router-controller: "userController" 
+  /findByUserId:
+    options:
+      tags:
+      - "Authentication"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "optionsMethodFindByUserId"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "bad request"
+        404:
+          description: "not found"
+      x-swagger-router-controller: "userController"
+    get:
+      tags:
+      - "Authentication"
+      summary: "Get user information by userId"
+      description: "This service is used to get user information by userId"
+      operationId: "findByUserId"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "userId"
+        in: "query"
+        description: "userId "
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/getuserobject"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Audit not found"
+      x-swagger-router-controller: "userController"  
+
+  /addBankLoan:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "addBankLoanInfoOptions"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+      x-swagger-router-controller: "insurancePolicyController"
+    post:
+      tags:
+      - "Bank"
+      summary: "Add new Loan"
+      description: "This service is used to add Loan with their details"
+      operationId: "addBankLoanInfo"
+      security:
+        - Bearer: []
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+        - name: "token"
+          in: "header"
+          required: false
+          type: "string"
+        - in: "formData"
+          name: loanDataJson
+          required: true
+          type: "string"
+          description: Loan data in json form.
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+
+  /processIpLetters/{requestId}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Process Ip Letter by Bank"
+      description: "This service used to send 200 for option method call"
+      operationId: "processIpLettersOptions"
+      produces:
+      - "application/json"
+      parameters:
+        - name: "token"
+          in: "header"
+          required: false
+          type: "string"
+        - name: "requestId"
+          in: "path"
+          description: "Comma separated Mortgage Numbers"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    put:
+      tags:
+      - "Bank"
+      summary: "Process Ip Letter by Bank"
+      description: "This service is used to Process Ip Letter by bank"
+      operationId: "processIpLetters"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+        - name: "token"
+          in: "header"
+          required: false
+          type: "string"
+        - name: "requestId"
+          in: "path"
+          description: "Comma separated Mortgage Numbers"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+
+  /getIpLetterCountByBankNNoticeDate/{days}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get count of  All IP notice of last n days by bank and notice date"
+      operationId: "getIpLetterCountByBankNNoticeDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "Get all IP notices received from service provider"
+      description: "This service is used to get count of  All IP notice of last n days by bank and notice date"
+      operationId: "getIpLetterCountByBankNNoticeDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "Enter last n days"
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getIpLetterDetailsByBankNDate/{noticeDate}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get Ip notice by date"
+      operationId: "getIpLetterDetailsByBankNDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "noticeDate"
+        in: "path"
+        description: "noticeDate to get IP notice"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "Get IP Notice details by Notice Date"
+      description: "This service used to  get IP Notice details by Notice Date"
+      operationId: "getIpLetterDetailsByBankNDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "noticeDate"
+        in: "path"
+        description: "noticeDate(YYYY-MM-DD) to get IP notice"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getExpiringIpLetterCountOfNdaysByInsurerNDate/{days}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get IP notice count of insurer of coming n days"
+      operationId: "getExpiringIpLetterCountOfNdaysByInsurerNDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get expiring policy"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "Get IP notice count of insurer of coming n days."
+      description: "This service used to  get Ip Notice count of insurer of coming n days."
+      operationId: "getExpiringIpLetterCountOfNdaysByInsurerNDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get expiring policy"
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+      
+  /getExpiringIpLetterDetailsByDateRange/{insurerName}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get Ip notice details by insurer and in expire date range"
+      operationId: "getExpiringIpLetterDetailsByDateRangeOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "insurerName"
+        in: "path"
+        description: "insurerName to get IP notice"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "This service is used to get Ip notice details by insurer and in notice date range"
+      description: "This service used to Ip notice details by insurer and in notice date range"
+      operationId: "getExpiringIpLetterDetailsByDateRange"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "insurerName"
+        in: "path"
+        description: "insurerName to get IP notice"
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  
+  /getExpiredIpCountOfLastNDaysByBankNDate/{days}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get All IP notices recevied"
+      operationId: "getExpiredIpCountOfLastNDaysByBankNDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "Get all IP notices received from service provider"
+      description: "This service used to  get all IP notices received"
+      operationId: "getExpiredIpCountOfLastNDaysByBankNDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getExpiredIPLetterByBankNDate/{date}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get Policy expire"
+      operationId: "getExpiredIPLetterByBankNDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "date"
+        in: "path"
+        description: "date to get expired policy"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "get Policy expires"
+      description: "This service used to  get Policy expires"
+      operationId: "getExpiredIPLetterByBankNDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "date"
+        in: "path"
+        description: "date to get expired policy"
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController"  
+
+
+  /listBankIPLettersByBankNlimit/{count}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to list IP notices"
+      operationId: "listBankIPLettersByBankNlimitOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "count"
+        in: "path"
+        description: "count to list IP notices"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "list IP notices"
+      description: "This service used to  list IP notices"
+      operationId: "listBankIPLettersByBankNlimit"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "count"
+        in: "path"
+        description: "count to list IP notices"
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /searchIPNoticesByBank/{attributeName}/{attributeValue}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to search IP notices"
+      operationId: "searchIPNoticesByBankOptions"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attribute/field Name"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attribute/field Value"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "search IP notices"
+      description: "This service used to  search IP notices"
+      operationId: "searchIPNoticesByBank"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "count to list IP notices"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "count to list IP notices"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getIPNoticeRecvdSummary/{policyNumber}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get Ip service received"
+      operationId: "getIPNoticeRecvdSummaryOption"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "policyNumber"
+        in: "path"
+        description: "Policy Number to get notice summary"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "Received Notice summary by policy number"
+      description: "This service used to  get Notice summary"
+      operationId: "getIPNoticeRecvdSummary"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "policyNumber"
+        in: "path"
+        description: "Policy Number to get notice summary"
+        required: true
+        type: "string"  
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController"  
+
+
+  /uploadIpLetters:
+    options:
+      tags:
+      - "Service Provider"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "uploadIpLettersOptions"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+      x-swagger-router-controller: "insurancePolicyController"
+    post:
+      tags:
+      - "Service Provider"
+      summary: "Upload IP Notice File"
+      description: "This service is used to upload IP notice file"
+      operationId: "uploadIpLetters"
+      security:
+        - Bearer: []
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+        - name: "token"
+          in: "header"
+          required: false
+          type: "string"
+        - in: formData
+          name: uploadIPNotices
+          required: true
+          type: file
+          description: Upload Ip notice.
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+  
+  /updateUnmatchIPNotices:
+    options:
+      tags:
+      - "Service Provider"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "updateUnmatchIPNoticesOptions"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+      x-swagger-router-controller: "insurancePolicyController"
+    post:
+      tags:
+      - "Service Provider"
+      summary: "Upload IP Notice File"
+      description: "This service is used to upload IP notice file"
+      operationId: "updateUnmatchIPNotices"
+      security:
+        - Bearer: []
+      consumes:
+      - "multipart/form-data"
+      produces:
+      - "application/json"
+      parameters:
+        - name: "token"
+          in: "header"
+          required: false
+          type: "string"
+        - in: formData
+          name: updateUnmatchIPNotices
+          required: true
+          type: file
+          description: Upload Ip notice.
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"    
+
+
+  /listUnmatchedNotices:
+    options:
+      tags:
+      - "Service Provider"
+      summary: "Get success for options"
+      description: "This service is used to list unmatched notice"
+      operationId: "listUnmatchedNoticesOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Service Provider"
+      summary: "Get all unmatched notices"
+      description: "This service used to  list unmatched notices"
+      operationId: "listUnmatchedNotices"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /downloadUnmatchedNotices:
+    options:
+      tags:
+      - "Service Provider"
+      summary: "Get success for options"
+      description: "This service is used to list unmatched notice"
+      operationId: "downloadUnmatchedNoticesOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Service Provider"
+      summary: "Get all unmatched notices"
+      description: "This service used to  list unmatched notices"
+      operationId: "downloadUnmatchedNotices"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /searchIPNotices/{attributeName}/{attributeValue}:
+    options:
+      tags:
+      - "Service Provider"
+      summary: "Get success for options"
+      description: "This service is used to search IP notices"
+      operationId: "searchIPNoticesOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attribute/field Name"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attribute/field Value"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Service Provider"
+      summary: "search IP notices"
+      description: "This service used to  search IP notices"
+      operationId: "searchIPNotices"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attribute/field Name"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attribute/field Value"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+    
+  /listIPNoticesByInsurer:
+    options:
+      tags:
+      - "Insurance Provider"
+      summary: "Get success for options"
+      description: "This service is used to list IP notices"
+      operationId: "listIPNoticesByInsurerOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Insurance Provider"
+      summary: "list IP notices"
+      description: "This service used to  list IP notices"
+      operationId: "listIPNoticesByInsurer"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /searchIPNoticesByInsurer/{insurerName}/{attributeName}/{attributeValue}:
+    options:
+      tags:
+      - "Insurance Provider"
+      summary: "Get success for options"
+      description: "This service is used to search IP notices"
+      operationId: "searchIPNoticesByInsurerOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "insurerName"
+        in: "path"
+        description: "Insurer Name"
+        required: true
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attribute/field Name"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attribute/field Value"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Insurance Provider"
+      summary: "search IP notices"
+      description: "This service used to  search IP notices"
+      operationId: "searchIPNoticesByInsurer"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "insurerName"
+        in: "path"
+        description: "Insurer Name"
+        required: true
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attribute/field Name"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attribute/field Value"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getAuditorIpCountByNoticeDate:
+    options:
+      tags:
+      - "Auditor"
+      summary: "Get success for options"
+      description: "This service is used to get All IP notices recevied"
+      operationId: "getAuditorIpCountByNoticeDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Auditor"
+      summary: "Get all IP notices received from service provider"
+      description: "This service used to  get all IP notices received"
+      operationId: "getAuditorIpCountByNoticeDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getIpNoticeByBankAndNoticeDate/{bankId}:
+    options:
+      tags:
+      - "Auditor"
+      summary: "Get success for options"
+      description: "This service is used to get All IP notices recevied"
+      operationId: "getIpNoticeByBankAndNoticeDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bankId"
+        in: "path"
+        description: "bankId"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Auditor"
+      summary: "Get all IP notices received from service provider"
+      description: "This service used to  get all IP notices received"
+      operationId: "getIpNoticeByBankAndNoticeDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bankId"
+        in: "path"
+        description: "bankId"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getAuditorPoliciesExpiringCount/{days}:
+    options:
+      tags:
+      - "Auditor"
+      summary: "Get success for options"
+      description: "This service is used to get Policy expire"
+      operationId: "getAuditorPoliciesExpiringCountOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get expired policy"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Auditor"
+      summary: "get Policy expires"
+      description: "This service used to  get Policy expires"
+      operationId: "getAuditorPoliciesExpiringCount"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get expired policy"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController"
+
+  /getAuditorExpiringPoliciesByBank/{bank}:
+    options:
+      tags:
+      - "Auditor"
+      summary: "Get success for options"
+      description: "This service is used to get Policy expire"
+      operationId: "getAuditorExpiringPoliciesByBankOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bank"
+        in: "path"
+        description: "bank id to get expired policy"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Auditor"
+      summary: "get Policy expires"
+      description: "This service used to  get Policy expires"
+      operationId: "getAuditorExpiringPoliciesByBank"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bank"
+        in: "path"
+        description: "bank id to get expired policy"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  
+  /getExpiredIpNoticeCountByDate/{days}:
+    options:
+      tags:
+      - "Auditor"
+      summary: "Get success for options"
+      description: "This service is used to get All IP notices recevied"
+      operationId: "getExpiredIpNoticeCountByDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Auditor"
+      summary: "Get all IP notices received from service provider"
+      description: "This service used to  get all IP notices received"
+      operationId: "getExpiredIpNoticeCountByDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  /getExpiredIpNoticeByBankAndDate/{bankId}:
+    options:
+      tags:
+      - "Auditor"
+      summary: "Get success for options"
+      description: "This service is used to get All IP notices recevied"
+      operationId: "getExpiredIpNoticeByBankAndDateOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bankId"
+        in: "path"
+        description: "bankId"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Auditor"
+      summary: "Get all IP notices received from service provider"
+      description: "This service used to  get all IP notices received"
+      operationId: "getExpiredIpNoticeByBankAndDate"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bankId"
+        in: "path"
+        description: "bankId"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController" 
+
+  
+
+  /findAllTransactionByType/{transactionType}:
+    options:
+      tags:
+      - "Transaction"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "findAllTransactionByTypeOptions"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "transactionType"
+        in: "path"
+        description: "TransactionType either addLoan or addIPLetter"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "bad request"
+        404:
+          description: "not found"
+      x-swagger-router-controller: "artWorkController"
+    get:
+      tags:
+      - "Transaction"
+      summary: "Get  information by transactionType"
+      description: "This service is used to get  information by transactionType"
+      operationId: "findAllTransactionByType"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "transactionType"
+        in: "path"
+        description: "TransactionType either addArtWork,updateArtWork or addConditionReport"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "artWorkController"
+
+  /getTransactionByReferenceNum/{referenceNumber}:
+    options:
+      tags:
+      - "Transaction"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "getTransactionByReferenceNumOptions"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "referenceNumber"
+        in: "path"
+        description: "Reference Number either artwork number or conditionreportnumber"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "bad request"
+        404:
+          description: "not found"
+      x-swagger-router-controller: "artWorkController"
+    get:
+      tags:
+      - "Transaction"
+      summary: "Get  information by transactionType"
+      description: "This service is used to get  information by transactionType"
+      operationId: "getTransactionByReferenceNum"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "referenceNumber"
+        in: "path"
+        description: "Reference Number either artwork number or conditionreportnumber"
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "artWorkController"
+
+  /findCurrentNumber:
+    options:
+      tags:
+      - "Block"
+      summary: "Get success for options"
+      description: "This service used to send 200 for option method call"
+      operationId: "optionsMethodFindBlockNo"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "bad request"
+        404:
+          description: "not found"
+      x-swagger-router-controller: "transactionController"
+    get:
+      tags:
+      - "Block"
+      summary: "Get block information"
+      description: "This service is used to get block information"
+      operationId: "getCurrentBlock"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Block"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Audit not found"
+      x-swagger-router-controller: "transactionController" 
+
+  /findByTransactionId/{transactionId}:
+    options:
+      tags:
+      - "Transaction"
+      summary: "Get  information by transactionId"
+      description: "This service is used to get  information by transactionId"
+      operationId: "getDetailsByTransactionIdOptions"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "transactionId"
+        in: "path"
+        description: ""
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/transactiondata"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Audit not found"
+      x-swagger-router-controller: "artWorkController" 
+    get:
+      tags:
+      - "Transaction"
+      summary: "Get  information by transactionId"
+      description: "This service is used to get  information by transactionId"
+      operationId: "getDetailsByTransactionId"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "transactionId"
+        in: "path"
+        description: ""
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/transactiondata"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Audit not found"
+      x-swagger-router-controller: "artWorkController" 
+
+securityDefinitions:
+  dlpstore_auth:
+    type: "oauth2"
+    authorizationUrl: "http://petstore.swagger.io/oauth/dialog"
+    flow: "implicit"
+    scopes:
+      write:ipnotice: "write IP notice"
+      read:ipnotice: "read IP notice"
+  Bearer:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"  
+
+definitions:
+  IP Letter:
+    type: "object"
+    properties:
+      policyNumber :
+        type: "string"
+      lotNumber :
+        type: "string"
+      batchNumber :
+        type: "string"
+      policyDetails :
+        type: "string"
+      policyIssueDate :
+        type: "string" 
+      policyExpiringdate :
+        type: "string"  
+      mortgageNumber :
+        type: "string"
+      insuredValue :
+        type: "string"
+      bankId :
+        type: "string"
+      policyStatus :
+        type: "string" 
+      transaction :
+        type: "array"
+        items:
+          $ref: "#/definitions/transactiondata"
+      
+  loan:
+    type: "object"
+    properties:
+      mortgageNumber :
+        type: "string"
+      policyNumber :
+        type: "string"
+      policyExpiringdate :
+        type: "string"
+      insuranceProvider :
+        type: "string"
+      insuredvalue :
+        type: "string"
+      policyStatus :
+        type: "string" 
+      loanAmount :
+        type: "string"  
+      propertyID :
+        type: "string"
+      ownerId :
+        type: "string"
+      action   :
+        type: "string"
+      bankName   :
+        type: "string" 
+      transaction :
+        type: "array"
+        items:
+          $ref: "#/definitions/transactiondata"
+
+  transactiondata:
+    type: "object"
+    properties:
+      transactionId :  
+        type: "string"
+      transactionType :
+        type: "string"
+      dateTime :
+        type: "string"
+      actor :
+        type: "string"
+      actorReference :
+        type: "string"
+      blockNumber :
+        type: "string"
+      additionalTags :
+        type: "string"
+
+  validateTokenForPost:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+    xml:
+      name: "Block" 
+
+  Block:
+    type: "object"
+    properties:
+      blockNo:
+        type: "string"
+    example:
+       blockNo: "blockNo"
+    xml:
+      name: "Block" 
+
+  getuserobject:
+    type: "object"
+    properties:
+      statusCode:
+        type: "string"
+      result:
+        type: "array"
+        items:
+          $ref: "#/definitions/user"
+    example:
+      statusCode: 200
+      result: [{
+       userId: "userId",
+       userName: "userName",
+       createdDate: "createdDate",
+       createdBy: "createdBy",
+       persona: "persona"
+      }]
+    xml:
+      name: "getuserobject" 
+
+  user:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      userId:
+        type: "string"
+      password:
+        type: "string" 
+      subscriptionKey:
+        type: "string"
+    example:
+       userId: "userId"
+       password: "password"
+       subscriptionKey: "subscriptionKey"
+    xml:
+      name: "user"     
+   
+  
+    

@@ -1,0 +1,7 @@
+{ 
+    "protocol" : "http",
+    "hostname":"18.222.37.52",
+    "port":"6001",
+    "db": "canadiandb",
+    "certdb": "blockchain-console-allcerts"
+}

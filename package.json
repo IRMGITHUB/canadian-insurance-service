@@ -1,0 +1,54 @@
+{
+  "name": "swagger-petstore",
+  "version": "1.0.0",
+  "description": "This is a server Petstore server.  You can find out more about     Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).      For this sample, you can use the api key `special-key` to test the authorization     filters.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha test --recursive"
+  },
+  "keywords": [
+    "swagger"
+  ],
+  "license": "Unlicense",
+  "private": true,
+  "dependencies": {
+    "add-subtract-date": "^1.0.14",
+    "async-request": "^1.2.0",
+    "bluebird": "^3.3.5",
+    "chai": "^2.1.2",
+    "chai-as-promised": "^5.3.0",
+    "chai-http": "^2.0.1",
+    "child_process": "^1.0.2",
+    "cluster": "^0.7.7",
+    "collections": "^3.0.0",
+    "compare-dates": "^1.2.0",
+    "config": "^1.20.1",
+    "connect": "^3.2.0",
+    "crypto": "^1.0.1",
+    "express": "4.12.3",
+    "fs-extra": "^7.0.1",
+    "js-yaml": "^3.3.0",
+    "json2xls": "^0.1.2",
+    "jsonwebtoken": "^8.3.0",
+    "jszip": "^3.2.1",
+    "log4js": "^4.0.0",
+    "mocha": "^4.0.1",
+    "moment": "^2.24.0",
+    "nano": "^7.0.0",
+    "node-datetime": "^2.1.0",
+    "node-rest-client": "^3.1.0",
+    "randomatic": "^3.1.0",
+    "request-promise": "^4.2.2",
+    "sha256": "^0.2.0",
+    "shortid": "^2.2.13",
+    "start": "^5.1.0",
+    "swagger-tools": "0.10.1",
+    "swagger-ui-express": "^4.0.2",
+    "uuid": "^3.3.2",
+    "xml-js": "^1.6.11"
+  },
+  "devDependencies": {
+    "nyc": "^13.0.1"
+  }
+}
