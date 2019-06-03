@@ -59,10 +59,10 @@ function readDatafromLoanJson(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.READ_DATA_FROM_LOAN_JSON);
   logHelper.logDebug(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.READ_DATA_FROM_LOAN_JSON, constants.REQUEST, req);
   try {
-    var requestBody = req.body.loanDataJson;
-    logger.info("requestBody===Json data========>", requestBody);
-    const loanJson = JSON.parse(requestBody);
-    var transactionId = util.generateId(constants.TRANSACTION_ID);
+  //  var requestBody = req.swagger.params['loanDataJson'].value;;//req.body.loanDataJson;
+    logger.info("req.body=========>",req.body);
+    const loanJson = req.body;
+     var transactionId = util.generateId(constants.TRANSACTION_ID);
     var uniqueLoanId = "L-" + loanJson.bankName + "-" + loanJson.mortgageNumber;
     loanJson["uniqueLoanId"] = uniqueLoanId;
     loanJson["schemaName"] = "Loan";
@@ -99,11 +99,10 @@ async function addBankLoanInfo(req, res) {
     if (loanJson) {
       let loanData = JSON.stringify(loanJson);
       var bankName = req.auth.orgName;
-      logger.info('bank name : ', bankName, loanJson.bankName);
+      logger.info('bank name : ', bankName, loanJson['bankName']);
       logger.info("testmode=====>",testMode);
       if (loanJson.bankName == bankName.trim() || testMode ) {
         var peerName = util.getPeerName(req.auth.orgName);
-        console.log("peerName=============>", peerName);
         var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.addLoanInfo;
         var getLoanResp = await chaincodeService.invokeChainCode(req.auth.fabricToken, loanData, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
         logger.info("getLoanResp=============", getLoanResp);
@@ -163,7 +162,8 @@ async function processIpLetters(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.ACKNOWLEDGE_IP_NOTICE);
   try {
     
-    var reqIdWithComma = req.swagger.params['requestId'].value;
+   // var reqIdWithComma = req.swagger.params['requestId'].value;
+   var reqIdWithComma = req.body;
     logger.info('reqIdWithComma ...', reqIdWithComma);
     var reqIdArray = reqIdWithComma.split(',');
     logger.info('reqIdArray ...', reqIdArray, reqIdArray.length);

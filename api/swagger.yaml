@@ -210,6 +210,7 @@ paths:
         200:
           description: "successful operation"
       x-swagger-router-controller: "insurancePolicyController"
+
     post:
       tags:
       - "Bank"
@@ -218,8 +219,6 @@ paths:
       operationId: "addBankLoanInfo"
       security:
         - Bearer: []
-      consumes:
-      - "multipart/form-data"
       produces:
       - "application/json"
       parameters:
@@ -227,10 +226,11 @@ paths:
           in: "header"
           required: false
           type: "string"
-        - in: "formData"
-          name: loanDataJson
+        - in: "body"
+          name: "loanDataJson"
           required: true
-          type: "string"
+          schema:
+            $ref: "#/definitions/loan"
           description: Loan data in json form.
       responses:
         200:
@@ -242,8 +242,9 @@ paths:
         405:
           description: "Validation exception"
       x-swagger-router-controller: "insurancePolicyController"
+    
 
-  /processIpLetters/{requestId}:
+  /processIpLetters:
     options:
       tags:
       - "Bank"
@@ -251,17 +252,7 @@ paths:
       description: "This service used to send 200 for option method call"
       operationId: "processIpLettersOptions"
       produces:
-        - "application/json"
-      parameters:
-        - name: "token"
-          in: "header"
-          required: false
-          type: "string"
-        - name: "requestId"
-          in: "path"
-          description: "Comma separated requestId"
-          required: true
-          type: "string"
+        - "application/text"
       responses:
         200:
           description: "successful operation"
@@ -281,17 +272,18 @@ paths:
       security:
         - Bearer: []
       produces:
-        - "application/json"
+        - "application/text"
       parameters:
         - name: "token"
           in: "header"
           required: false
           type: "string"
         - name: "requestId"
-          in: "path"
+          in: "body"
           description: "Comma separated requestId"
           required: true
-          type: "string"
+          schema:
+            $ref: "#/definitions/processIpLetter"
       responses:
         200:
           description: "successful operation"
@@ -2066,6 +2058,10 @@ definitions:
        subscriptionKey: "subscriptionKey"
     xml:
       name: "user"     
+
+  processIpLetter:
+    type: "string"
+    
    
   
     
