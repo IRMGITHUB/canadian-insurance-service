@@ -69,7 +69,7 @@ function readDatafromLoanJson(req, res) {
     loanJson["transaction"] = [{
       "transactionId": transactionId,
       "transactionTimeStamp": new Date(),
-      "transactionType": "Loan",
+      "transactionType": "addLoan",
       "actor": req.auth.orgName
      // "actorReference": loanJson.insuranceProvider,
 
@@ -116,7 +116,7 @@ async function addBankLoanInfo(req, res) {
             transactionType: 'addLoan',
             blockNo: blockNumber,
             actor: req.auth.orgName,
-            actorReference: loanJson.insuranceProvider,
+           // actorReference: loanJson.insuranceProvider,
             createdBy: req.auth.sub,
             referenceNumber: loanJson.uniqueLoanId
           }
@@ -186,7 +186,7 @@ async function processIpLetters(req, res) {
      // find mortgageNumber from ipletter
       var getIPletterMortgageNumberResp = await chaincodeService.queryChainCodeThreeArgs(fabricToken, requestId.trim(), bankId, schemaNameIp, chaincodeName, chaincodeFunctionNameIpLetter, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       console.log('getIPletterMortgageNumberResp------------>', getIPletterMortgageNumberResp  , getIPletterMortgageNumberResp.length);
-      if (getIPletterMortgageNumberResp != 0) {
+      if (getIPletterMortgageNumberResp.length>0) {
         var mortgageNumber = getIPletterMortgageNumberResp[0].Record.mortgageNumber;
         logger.info('mortgageNumber---> ', mortgageNumber);
         logger.info('bankId: , getIPletterMortgageNumberResp[0].Record.bankId : ', bankId, getIPletterMortgageNumberResp[0].Record.bankId)
@@ -206,7 +206,7 @@ async function processIpLetters(req, res) {
             getIPletterMortgageNumberResp[0].Record.transaction.push({
               "transactionId": transactionId,
               "transactionTimeStamp": new Date(),
-              "transactionType": "MatchIpLetter",
+              "transactionType": "updateIpLetter",
               "actor": req.auth.orgName,
               "actorReference": getIPletterMortgageNumberResp[0].Record.insuranceProvider,
               "additionalTags": ""
@@ -228,7 +228,7 @@ async function processIpLetters(req, res) {
               actor: req.auth.orgName,
               actorReference: getIPletterMortgageNumberResp[0].Record.insuranceProvider,         //loanJson.insuranceProvider,
               createdBy: req.auth.sub,
-              referenceNumber : mortgageNumber
+              referenceNumber : getIPletterMortgageNumberResp[0].Record.requestId
             }
             console.log("reqTransactionData=========>", reqTransactionData);
             var transData = await transactionService.addTransaction(reqTransactionData);
@@ -251,8 +251,8 @@ async function processIpLetters(req, res) {
                 "transactionId": transactionId,
                 "transactionTimeStamp": new Date(),
                 "transactionType": "UpdateLoan",
-                "actor": req.auth.orgName,
-                "actorReference": getMortgageNumberResp[0].Record.insuranceProvider
+                "actor": req.auth.orgName
+               // "actorReference": getMortgageNumberResp[0].Record.insuranceProvider
               });
 
               logger.info('getPolicyNumberResp[0].Record---->', getMortgageNumberResp[0].Record);
@@ -260,13 +260,30 @@ async function processIpLetters(req, res) {
               var loanupdateResp = await chaincodeService.invokeChainCode(fabricToken, JSON.stringify(getMortgageNumberResp[0].Record), chaincodeName, chaincodeFunctionNameAddLoan, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
               logger.info('loanupdateResp---------------->>>>', loanupdateResp);
               if (loanupdateResp != 0) {
+                //add loan transaction in offchain
+                var blockData = await chaincodeService.queryBlockByTransactionId(req.auth.fabricToken, loanupdateResp, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+                var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
+                var blockNumber = blockData.header.number.toString();
+                var reqTransactionData = {
+                  transactionId: ipletterupdateResp1,
+                  blockchainTimeStamp: timestamp,
+                  transactionType: 'updateLoan',
+                  blockNo: blockNumber,
+                  actor: req.auth.orgName,
+                 // actorReference: getIPletterMortgageNumberResp[0].Record.insuranceProvider,     //loanJson.insuranceProvider,
+                  createdBy: req.auth.sub,
+                  referenceNumber : getMortgageNumberResp[0].Record.uniqueLoanId
+                }
+                console.log("reqTransactionData=========>", reqTransactionData);
+                var transData = await transactionService.addTransaction(reqTransactionData);
+                logger.info("transData=============", transData);
                 // update requestStatus in ipletter  Processed
                 getIPletterMortgageNumberResp[0].Record.requestStatus = "Processed";
                 var transactionId = util.generateId(constants.TRANSACTION_ID);
                 getIPletterMortgageNumberResp[0].Record.transaction.push({
                   "transactionId": transactionId,
                   "transactionTimeStamp": new Date(),
-                  "transactionType": "ProcessedIpLetter",
+                  "transactionType": "updateIpLetter",
                   "actor": req.auth.orgName,
                   "actorReference": getIPletterMortgageNumberResp[0].Record.insuranceProvider,
                   "additionalTags": ""
@@ -286,7 +303,7 @@ async function processIpLetters(req, res) {
                     actor: req.auth.orgName,
                     actorReference: getIPletterMortgageNumberResp[0].Record.insuranceProvider,     //loanJson.insuranceProvider,
                     createdBy: req.auth.sub,
-                    referenceNumber : mortgageNumber
+                    referenceNumber : getIPletterMortgageNumberResp[0].Record.requestId
                   }
                   console.log("reqTransactionData=========>", reqTransactionData);
                   var transData = await transactionService.addTransaction(reqTransactionData);
@@ -301,7 +318,7 @@ async function processIpLetters(req, res) {
             getIPletterMortgageNumberResp[0].Record.transaction.push({
               "transactionId": transactionId,
               "transactionTimeStamp": new Date(),
-              "transactionType": "Unmatched",
+              "transactionType": "updateIpLetter",
               "actor": req.auth.orgName,
               "actorReference": getIPletterMortgageNumberResp[0].Record.insuranceProvider,
               "additionalTags": ""
@@ -322,7 +339,7 @@ async function processIpLetters(req, res) {
                 actor: req.auth.orgName,
                 actorReference:getIPletterMortgageNumberResp[0].Record.insuranceProvider,      //loanJson.insuranceProvider,
                 createdBy: req.auth.sub,
-                referenceNumber : mortgageNumber
+                referenceNumber : getIPletterMortgageNumberResp[0].Record.requestId
               }
               console.log("reqTransactionData=========>", reqTransactionData);
               var transData = await transactionService.addTransaction(reqTransactionData);
@@ -341,7 +358,7 @@ async function processIpLetters(req, res) {
           getIPletterMortgageNumberResp[0].Record.transaction.push({
             "transactionId": transactionId,
             "transactionTimeStamp": new Date(),
-            "transactionType": "Unmatched",
+            "transactionType": "updateIpLetter",
             "actor": req.auth.orgName,
             "actorReference": getIPletterMortgageNumberResp[0].Record.insuranceProvider,
             "additionalTags": ""
@@ -362,19 +379,19 @@ async function processIpLetters(req, res) {
               actor: req.auth.orgName,
               actorReference:getIPletterMortgageNumberResp[0].Record.insuranceProvider,      //loanJson.insuranceProvider,
               createdBy: req.auth.sub,
-              referenceNumber : mortgageNumber
+              referenceNumber : getIPletterMortgageNumberResp[0].Record.requestId
             }
             console.log("reqTransactionData=========>", reqTransactionData);
             var transData = await transactionService.addTransaction(reqTransactionData);
             logger.info("transData=============", transData);
             }
         }
-      } else {
+      } /*else {
         return ({
           statusCode: constants.SUCCESS,
           result: "invalid org name"
         });
-      }
+      }*/
     }
   } catch (error) {
     logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.ACKNOWLEDGE_IP_NOTICE, error);
@@ -382,6 +399,13 @@ async function processIpLetters(req, res) {
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500
     })
+  }
+  finally
+  {
+    return ({
+      statusCode: constants.SUCCESS,
+      result: "IP letter Processed Successfully!!!"
+    });
   }
 }
 
@@ -844,7 +868,7 @@ async function chainCodeCall(jsonFromXML, req, res) {
   requestBody1["transaction"] = [{
     "transactionId": transactionId,
     "transactionTimeStamp": new Date(),
-    "transactionType": "addIPNotices",
+    "transactionType": "addIpLetter",
     "actor": req.auth.orgName,
     "actorReference": requestBody1.insuranceProvider,
     "additionalTags": ""
@@ -1032,7 +1056,7 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
   requestBody1["transaction"] = [{
     "transactionId": transactionId,
     "transactionTimeStamp": new Date(),
-    "transactionType": "updateIPNotice",
+    "transactionType": "updateIpLetter",
     "actor": req.auth.orgName,
     "actorReference": requestBody1.insuranceProvider,
     "additionalTags": ""
