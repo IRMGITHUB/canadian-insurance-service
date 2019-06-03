@@ -18,7 +18,8 @@ module.exports = {
     getUrl:getUrl,
     getEnrollUrl:getEnrollUrl,
     getResultArrayfromBlockChainResult:getResultArrayfromBlockChainResult,
-    getpreviousdate : getpreviousdate
+    getpreviousdate : getpreviousdate,
+    convertData : convertData
 }
 
 function generateId(assetType){
@@ -88,6 +89,45 @@ var dateTo= requiredDate.getDate()+"/"+(requiredDate.getMonth()+1)+"/"+require
 logger.info('dateTo-----> ',dateTo); 
 return dateTo;
 }
+
+function convertData(data, keyName) {
+    let objArry = [];
+    let keyArr = [];
+    for(let index=0; index < data.length; index++) {
+      const key = data[index].Record[keyName];
+      if(key) {
+        if (keyArr.indexOf(key) === -1) {
+          keyArr.push(key);
+          if(keyName === "policyExpiringDate"){
+	    objArry.push({
+            	date: key,
+            	count: 1
+            });
+	  } else {
+            objArry.push({
+            	insurer: key,
+            	count: 1
+            });
+	  }
+        } else {
+          const keyIndex = keyArr.indexOf(key);
+          if(keyName === "policyExpiringDate"){
+              objArry[keyIndex] = {
+           	 date: objArry[keyIndex].date,
+            	 count: objArry[keyIndex].count + 1 
+              }
+	  } else {
+             objArry[keyIndex] = {
+            	insurer: objArry[keyIndex].insurer,
+            	count: objArry[keyIndex].count + 1 
+              }
+	  }
+        }
+      }
+    }
+  return objArry;    
+
+  }
 
 
 

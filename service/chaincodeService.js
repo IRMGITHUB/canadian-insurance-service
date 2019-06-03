@@ -296,7 +296,7 @@ async function queryChainCodeTwoArgs(fabricToken, Id, schemaName , chainCo
             try {
             if (attributeName!= "") {
             var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + attributeName+ "%22%2C%22" +attributeVal+ "%22%2C%22" +schemaName+ "%22%2C%22" +userType+"%22%5D"; 
-            console.log("url with id two args ================>", url);
+            console.log("url with id four args ================>", url);
             } else {
             var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" +schemaName+"%22%5D"; 
             logger.info("url without id ================>", url);

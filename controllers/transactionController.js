@@ -9,12 +9,11 @@ var logger = logHelper.getLogger(config.processname);
 
 module.exports = {
   
-  getTransactionsByLcn: getTransactionsByLcn,
+  getTransactionByReferenceNum: getTransactionByReferenceNum,
   getCurrentBlock: getCurrentBlock,
   getDetailsByTransactionId:getDetailsByTransactionId,
-  optionsMethodTransactionFindByLCN: optionsMethodTransaction,
-  optionsMethodTransactionFindByTRSId: optionsMethodTransaction,
-  optionsMethodFindBlockNo: optionsMethodTransaction
+  getTransactionByReferenceNumOptions: optionsMethodTransaction,
+  getDetailsByTransactionIdOptionsOptions : optionsMethodTransaction
 }
  
 /**
@@ -24,11 +23,11 @@ module.exports = {
  * @param {*} res
  * @param {*} next
  */
-function getTransactionsByLcn(req, res, next) {
+function getTransactionByReferenceNum(req, res, next) {
   logHelper.logMethodEntry(logger, constants.TRANSACTION_CONTROLLER_FILE, constants.GET_TRANSACTION_BY_LCN);
-    var loanControlNumber = req.swagger.params['loanControlNumber'].value;
+    var referenceNumber = req.swagger.params['referenceNumber'].value;
     logHelper.logDebug(logger, constants.TRANSACTION_CONTROLLER_FILE, constants.GET_TRANSACTION_BY_LCN, constants.REQUEST);
-    transactionService.getTransactionsByLcn(loanControlNumber).then(function (response) {
+    transactionService.getTransactionByReferenceNum(referenceNumber).then(function (response) {
       logHelper.logDebug(logger, constants.TRANSACTION_CONTROLLER_FILE, constants.GET_TRANSACTION_BY_LCN, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.TRANSACTION_CONTROLLER_FILE, constants.GET_TRANSACTION_BY_LCN);
       utils.writeJson(res, response, constants.SUCCESS);

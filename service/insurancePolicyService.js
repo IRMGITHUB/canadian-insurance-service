@@ -13,39 +13,47 @@ const chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
 var JSZip = require("jszip");
 var convert = require('xml-js');
 const uuidV1 = require('uuid/v1');
-const getAllIpNoticeDay = 5;
+const getAllIpNoticeDay = constants.NO_OF_DAYS;
 var moment = require('moment');
 var json2xls = require('json2xls');
+const testMode=configData.TEST_MODE;
+const ipLetterSchemaName="IpLetter";
 
 module.exports = {
   readDatafromLoanJson: readDatafromLoanJson,
-  getIPNoticeRecvdSummary: getIPNoticeRecvdSummary,
   addBankLoanInfo: addBankLoanInfo,
-  getIpLetterCountByBankNNoticeDate: getIpLetterCountByBankNNoticeDate,
   processIpLetters: processIpLetters,
+  getIpLetterCountByBankNNoticeDate: getIpLetterCountByBankNNoticeDate,
   getIpLetterDetailsByBankNDate: getIpLetterDetailsByBankNDate,
   getExpiringIpLetterCountOfNdaysByInsurerNDate: getExpiringIpLetterCountOfNdaysByInsurerNDate,
+  getExpiringIpLetterDetailsByDateRange: getExpiringIpLetterDetailsByDateRange,
+  getExpiredIpCountOfLastNDaysByBankNDate: getExpiredIpCountOfLastNDaysByBankNDate,
   getExpiredIPLetterByBankNDate: getExpiredIPLetterByBankNDate,
   listBankIPLettersByBankNlimit: listBankIPLettersByBankNlimit,
   searchIPNoticesByBank: searchIPNoticesByBank,
   uploadIpLetters: uploadIpLetters,
   updateUnmatchIPNotices: updateUnmatchIPNotices,
   listUnmatchedNotices: listUnmatchedNotices,
-  ipNoticesSummary: ipNoticesSummary,
-  searchIPNoticesByInsurer: searchIPNoticesByInsurer,
+  downloadUnmatchedNotices: downloadUnmatchedNotices,
   searchIPNotices: searchIPNotices,
-  getExpiredIpCountOfLastNDaysByBankNDate: getExpiredIpCountOfLastNDaysByBankNDate,
+  searchIPNoticesByInsurer: searchIPNoticesByInsurer,
   getAuditorIpCountByNoticeDate: getAuditorIpCountByNoticeDate,
   getIpNoticeByBankAndNoticeDate: getIpNoticeByBankAndNoticeDate,
   getAuditorPoliciesExpiringCount: getAuditorPoliciesExpiringCount,
   getAuditorExpiringPoliciesByBank: getAuditorExpiringPoliciesByBank,
   getExpiredIpNoticeCountByDate: getExpiredIpNoticeCountByDate,
-  getExpiredIpNoticeByBankAndDate: getExpiredIpNoticeByBankAndDate,
-  getExpiringIpLetterDetailsByDateRange: getExpiringIpLetterDetailsByDateRange,
-  downloadUnmatchedNotices: downloadUnmatchedNotices
+  getExpiredIpNoticeByBankAndDate: getExpiredIpNoticeByBankAndDate
   
-
+  
+ 
+  
 }
+
+/**
+ * This method will read loan json data.
+ * @param {*} req 
+ * @param {*} res 
+ */
 
 function readDatafromLoanJson(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.READ_DATA_FROM_LOAN_JSON);
@@ -55,16 +63,15 @@ function readDatafromLoanJson(req, res) {
     logger.info("requestBody===Json data========>", requestBody);
     const loanJson = JSON.parse(requestBody);
     var transactionId = util.generateId(constants.TRANSACTION_ID);
-    //var mortgageNumber="m-"+util.generateId(constants.MORTGAGE_NUMBER);
-    var uniqueLoanId = "L-"+loanJson.bankName + "-" + loanJson.mortgageNumber;
+    var uniqueLoanId = "L-" + loanJson.bankName + "-" + loanJson.mortgageNumber;
     loanJson["uniqueLoanId"] = uniqueLoanId;
     loanJson["schemaName"] = "Loan";
     loanJson["transaction"] = [{
       "transactionId": transactionId,
       "transactionTimeStamp": new Date(),
       "transactionType": "Loan",
-      "actor": req.auth.orgName,
-      "actorReference": loanJson.insuranceProvider,
+      "actor": req.auth.orgName
+     // "actorReference": loanJson.insuranceProvider,
 
     }]
 
@@ -80,7 +87,7 @@ function readDatafromLoanJson(req, res) {
   }
 }
 /**
- * This method will get ip notice received summary.
+ * This method will add bank loan info.
  * @param {*} req 
  * @param {*} res 
  */
@@ -91,12 +98,12 @@ async function addBankLoanInfo(req, res) {
     var loanJson = await readDatafromLoanJson(req, res);
     if (loanJson) {
       let loanData = JSON.stringify(loanJson);
-      //var mortgageNumber=loanData.mortgageNumber;
       var bankName = req.auth.orgName;
       logger.info('bank name : ', bankName, loanJson.bankName);
-      if (loanJson.bankName == bankName.trim()) {
+      logger.info("testmode=====>",testMode);
+      if (loanJson.bankName == bankName.trim() || testMode ) {
         var peerName = util.getPeerName(req.auth.orgName);
-        console.log("peerName=============>",peerName);
+        console.log("peerName=============>", peerName);
         var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.addLoanInfo;
         var getLoanResp = await chaincodeService.invokeChainCode(req.auth.fabricToken, loanData, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
         logger.info("getLoanResp=============", getLoanResp);
@@ -106,12 +113,13 @@ async function addBankLoanInfo(req, res) {
           var blockNumber = blockData.header.number.toString();
           var reqTransactionData = {
             transactionId: getLoanResp,
-            dateTime: timestamp,
+            blockchainTimeStamp: timestamp,
             transactionType: 'addLoan',
-            blockno: blockNumber,
-            actor: req.auth.persona,
-            actorReference: loanJson["mortgageNumber"],
-            createdBy: req.auth.sub
+            blockNo: blockNumber,
+            actor: req.auth.orgName,
+            actorReference: loanJson.insuranceProvider,
+            createdBy: req.auth.sub,
+            referenceNumber: loanJson.uniqueLoanId
           }
           console.log("reqTransactionData=========>", reqTransactionData);
           var transData = await transactionService.addTransaction(reqTransactionData);
@@ -124,14 +132,14 @@ async function addBankLoanInfo(req, res) {
         } else {
           return ({
             statusCode: constants.NO_CONTENT,
-            result: constants.MESSAGE_500
+            result: constants.MESSAGE_204
           });
 
         }
       } else {
         return ({
-          code: constants.INTERNAL_SERVER_ERROR,
-          message: "invalid org name."
+          statusCode: constants.INVALID_INPUT,
+          message: constants.INVALID_ORG
         });
       }
     }
@@ -143,504 +151,24 @@ async function addBankLoanInfo(req, res) {
     });
   }
 }
-/**
- * This method will get ip notice count of bank by notice date range.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getIpLetterCountByBankNNoticeDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_ALL_IP_NOTICE_RECVD_SUMRY);
-  try {
-    var noOfDays = req.swagger.params['days'].value;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterCountByNoticeDateAndBankId;
-    var result = [];
-    var awaitResults = [];
-    var authOwnerId = req.auth.orgName;
-    //var authOwnerId="bank";
-    for (var i = 0; i < noOfDays; i++) {
-      var noticeDate1 = moment().subtract(i, 'days').format('YYYY-MM-DD');
-      var noticeDate = noticeDate1 + " 00:00:00"
-      logger.info("noticeDate=========>", noticeDate);
-      result[i] = chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, noticeDate.toString().trim(), authOwnerId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-      console.log("result[i]=======>", result[i]);
-      awaitResults[i] = result[i];
-    }
-    var finalJson = await Promise.all(awaitResults).then((res) => {
-      console.log("final res=>", res);
-      return res;
-    });
-    logger.info("finalJson========>", finalJson);
-    if (finalJson) {
-      return ({
-        statusCode: constants.SUCCESS,
-        result: "Success",
-        transactionId: finalJson
-      });
-    } else {
-      return ({
-        statusCode: constants.NO_CONTENT,
-        result: constants.MESSAGE_500
-      });
-
-    }
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_ALL_IP_NOTICE_RECVD_SUMRY, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-
-
 
 /**
- * This method will get ip notice received summary.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getExpiredIpCountOfLastNDaysByBankNDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_ALL_IP_NOTICE_RECVD_SUMRY);
-  try {
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpPoliciesExpiringByDateRangeAndBankId;
-    var authOwnerId = req.auth.sub;
-    var noOfDays = req.swagger.params['days'].value;
-    var fromExpiredDate1 = moment().subtract(noOfDays, 'days').format('YYYY-MM-DD');
-    var fromExpiredDate = fromExpiredDate1 + " 23:59:59";
-    var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
-    var toExpiredDate = toExpiredDate1 + " 23:59:59";
-    logger.info("fromExpiredDate=========>", fromExpiredDate);
-    logger.info("toExpiredDate=========>", toExpiredDate);
-    var schemaName = "IpLetter";
-    var bankId = req.auth.orgName;
-    var getExpiredPolicyResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), schemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    console.log("getExpiredPolicyResp===============>", getExpiredPolicyResp);
-    var myObject = {};
-    for (var i = 0; i < getExpiredPolicyResp.length; i++) {
-      var key = getExpiredPolicyResp[i].Record.policyExpiringDate;
-      console.log('key........', key);
-      console.log(getExpiredPolicyResp[i].Record.policyExpiringDate);
-      console.log('---', myObject.hasOwnProperty(key));
-      if (myObject.hasOwnProperty(key)) {
-        myObject[key] += 1;
-      } else {
-        myObject[key] = 1;
-      }
-    }
-    if (myObject) {
-      return ({
-        statusCode: constants.SUCCESS,
-        result: "Success",
-        result: myObject
-      });
-    } else {
-      return ({
-        statusCode: constants.NO_CONTENT,
-        result: constants.MESSAGE_500
-      });
-
-    }
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_ALL_IP_NOTICE_RECVD_SUMRY, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-
-
-
-/**
- * This method will get ip notice received summary.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getExpiredIpNoticeCountByDate(req, res) {
-
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_ALL_IP_NOTICE_RECVD_SUMRY);
-  if(req.auth.orgName==constants.AUDITOR){
-  try {
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpPoliciesExpiringByDateRange;
-    var authOwnerId = req.auth.sub;
-    var noOfDays = req.swagger.params['days'].value;
-    var fromExpiredDate1 = moment().subtract(noOfDays, 'days').format('YYYY-MM-DD');
-    var fromExpiredDate = fromExpiredDate1 + " 23:59:59";
-    var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
-    var toExpiredDate = toExpiredDate1 + " 23:59:59";
-    logger.info("fromExpiredDate=========>", fromExpiredDate);
-    logger.info("toExpiredDate=========>", toExpiredDate);
-    var schemaName = "IpLetter";
-    // var bankId=req.auth.persona;
-    var getExpiredPolicyResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, fromExpiredDate.toString(), toExpiredDate.toString(), schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info("getExpiredPolicyResp===============>", getExpiredPolicyResp);
-    var myObject = {};
-    for (var i = 0; i < getExpiredPolicyResp.length; i++) {
-      var key = getExpiredPolicyResp[i].Record.bankId;
-      logger.info('key........', key);
-      logger.info(getExpiredPolicyResp[i].Record.bankId);
-      if (myObject.hasOwnProperty(key)) {
-        myObject[key] += 1;
-      } else {
-        myObject[key] = 1;
-      }
-    }
-    if (myObject) {
-      return ({
-        statusCode: constants.SUCCESS,
-        result: "Success",
-        result: myObject
-      });
-    } else {
-      return ({
-        statusCode: constants.NO_CONTENT,
-        result: constants.MESSAGE_500
-      });
-
-    }
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_ALL_IP_NOTICE_RECVD_SUMRY, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}else
-return ({
-  statusCode: constants.SUCCESS,
-  result: "Invalid Org name"
-});
-}
-
-
-
-/**
- * This method will get ip notice received summary.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getAuditorIpCountByNoticeDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_IP_COUNT_BY_NOTICEDATE);
-  console.log("req.auth.orgName=constants.Auditor",req.auth.orgName);
-  if(req.auth.orgName=constants.AUDITOR){
-  try {
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterByNoticeDateRangeAndSchemaName;
-    var authOwnerId = req.auth.sub;
-    var noOfDays = getAllIpNoticeDay;
-    var fromNoticeDate1 = moment().subtract(noOfDays, 'days').format('YYYY-MM-DD');
-    var fromNoticeDate = fromNoticeDate1 + " 00:00:00";
-    var toNoticeDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
-    var toNoticeDate = toNoticeDate1 + " 00:00:00";
-    var schemaName = "IpLetter";
-    var getIpNoticeResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, fromNoticeDate.toString(), toNoticeDate.toString(), schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info("getIpNoticeResp===>", getIpNoticeResp);
-    var myObject = {};
-    for (var i = 0; i < getIpNoticeResp.length; i++) {
-      var key = getIpNoticeResp[i].Record.bankId;
-      logger.info(getIpNoticeResp[i].Record.bankId);
-      if (myObject.hasOwnProperty(key)) {
-        myObject[key] += 1;
-      } else {
-        myObject[key] = 1;
-      }
-    }
-    if (myObject) {
-      return ({
-        statusCode: constants.SUCCESS,
-        result: myObject
-      });
-    }
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_IP_COUNT_BY_NOTICEDATE, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}else
-return ({
-  statusCode: constants.SUCCESS,
-  result: "Invalid Org Name"
-});
-}
-
-
-
-/**
- * This method will get ip notice received summary.
- * @param {*} req 
- * @param {*} res 
- */
-
-/*async function getExpiredIpNoticeCountByDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_IP_COUNT_BY_NOTICEDATE);
-  try {
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getExpiredIpNoticeCountByDate;
-    var jsonDatewiseCount={};
-    var dateArray = [];
-    let finalResult ="";
-    var result = [];
-    var awaitResults=[];
-    let finalObj = {};
-    var authOwnerId = req.auth.sub;
-    //var expiredStartDate= new Date(moment().subtract(getAllIpNoticeDay, 'days').format('YYYY-MM-DD')).getTime();
-   // var expiredEndDate= new Date(moment().subtract(1, 'days').format('YYYY-MM-DD')).getTime();
-    var today=new Date(); //Today's Date
-   var fromDate=new Date(today.getFullYear(), today.getMonth(), today.getDate()-getAllIpNoticeDay);
-   var toDate=new Date(today.getFullYear(), today.getMonth(), today.getDate());
-   var fromDateValue= fromDate.getFullYear()+"-"+(fromDate.getMonth()+1)+"-"+fromDate.getDate();
-   var toDateValue= toDate.getFullYear()+"-"+(toDate.getMonth()+1)+"-"+toDate.getDate();
-   var dateFrom = new Date(fromDateValue).getTime();
-   var dateTo = new Date(toDateValue).getTime();
-   console.log("dateFrom=========>",dateFrom);
-   console.log("dateTo=========>",dateTo);
-   var schemaName="addIpLetter";
-   var getIpNoticeResp= await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken,dateFrom.toString(),dateTo.toString(),schemaName,chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName) ; 
-   var myObject = { };
-   for(var i=0 ; i<getIpNoticeResp.length ; i++)
-   {
-  var key =getIpNoticeResp[i].Record.bankId
-  console.log(getIpNoticeResp[i].Record.bankId);
-  console.log('---',myObject.hasOwnProperty(key));
-  if(myObject.hasOwnProperty(key)){
-    myObject[key] += 1;
-  } else{
-    myObject[key] = 1;
-   }
-   }
-   if (myObject) {
-    return ({
-      statusCode: constants.SUCCESS,
-      result: "Success",
-      transactionId: myObject
-    });
-  } 
-    } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_IP_COUNT_BY_NOTICEDATE, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}*/
-
-
-
-/**
- * This method will get Ip details by policy Number.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getIPNoticeRecvdSummary(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY);
-  try {
-    var policyNumber = req.swagger.params['policyNumber'].value;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterByPolicyNumber;
-    var schemaName = "IpLetter";
-    var getIpNoticeResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, policyNumber, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    console.log("getIpNoticeResp============>", getIpNoticeResp.length);
-    if (getIpNoticeResp.length > 0)
-      return ({
-        statusCode: constants.SUCCESS,
-        result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
-      });
-    else
-      return ({
-        statusCode: constants.SUCCESS,
-        result: constants.MESSAGE_204
-      });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-
-/**
- * This method will get Ip details by policy Number.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getIpNoticeByBankAndNoticeDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY);
-  if(req.auth.orgName==constants.AUDITOR){
-  try {
-    var fromExpiredDate1 = moment().subtract(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
-    var fromExpiredDate = fromExpiredDate1 + " 00:00:00";
-    var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
-    var toExpiredDate = toExpiredDate1 + " 00:00:00"
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndNoticeDate;
-    var schemaName = "IpLetter";
-    var bankId = req.auth.orgName;
-    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), bankId, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    console.log("getIpNoticeResp============>", getIpNoticeResp);
-    if (getIpNoticeResp)
-      return ({
-        statusCode: constants.SUCCESS,
-        result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
-      });
-    else
-      return ({
-        statusCode: constants.SUCCESS,
-        result: constants.MESSAGE_204
-      });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-else
-return ({
-  statusCode: constants.SUCCESS,
-  result: "Invalid Org Name"
-});
-}
-
-async function getExpiredIpNoticeByBankAndDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY);
-  if(req.auth.orgName==constants.AUDITOR){
-  try {
-    var fromExpiredDate1 = moment().subtract(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
-    var fromExpiredDate = fromExpiredDate1 + " 23:59:59";
-    var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
-    var toExpiredDate = toExpiredDate1 + " 23:59:59";
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndExpireDate;
-    var schemaName = "IpLetter";
-    var bankId = req.auth.orgName;
-    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString(), toExpiredDate.toString(), bankId, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info("getIpNoticeResp---->", getIpNoticeResp.length);
-    if (getIpNoticeResp.length > 0)
-      return ({
-        statusCode: constants.SUCCESS,
-        result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
-      });
-    else
-      return ({
-        statusCode: constants.SUCCESS,
-        result: constants.MESSAGE_204
-      });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-else
-return ({
-  statusCode: constants.SUCCESS,
-  result: "Invalid Org Name"
-});
-}
-
-/**
- * This method will get Ip notice by date.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getIpLetterDetailsByBankNDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICES_BY_DATE);
-  try {
-    // var n=7;
-    var noticeDate1 = req.swagger.params['noticeDate'].value;
-    var noticeDate = noticeDate1 + " 00:00:00";
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var fabricToken = req.auth.fabricToken;
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByNoticeDate;
-    logger.info('chaincodeFunctionName:::', chaincodeFunctionName);
-    var schemaName = "IpLetter";
-    var bankId = req.auth.orgName;
-    var getIpLetterNoticeDateResp = await chaincodeService.queryChainCodeThreeArgs(fabricToken, noticeDate.toString().trim(), bankId, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info('getIpLetterNoticeDateResp: ', getIpLetterNoticeDateResp);
-    return ({
-      statusCode: constants.SUCCESS,
-      result: util.getResultArrayfromBlockChainResult(getIpLetterNoticeDateResp)
-    });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICES_BY_DATE, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-
-
-/**
- * This method will get Ip notice by date.
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getExpiringIpLetterDetailsByDateRange(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICES_BY_DATE);
-  try {
-    var insurerName = req.swagger.params['insurerName'].value;
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var fabricToken = req.auth.fabricToken;
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpnoticebyExpireDateRangeAndInsurer;
-    logger.info('chaincodeFunctionName-->', chaincodeFunctionName);
-    var dateFrom1 = moment().format('YYYY-MM-DD');
-    var dateFrom = dateFrom1 + " 00:00:00";
-    var dateTo1 = moment().add(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
-    var dateTo = dateTo1 + " 00:00:00";
-    var schemaName = "IpLetter";
-    var bankId = req.auth.orgName;
-    var getIpLetterNoticeDateResp = await chaincodeService.queryChainCodeFiveArgs(fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), insurerName.trim(), bankId, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    console.log('getIpLetterNoticeDateResp: ', getIpLetterNoticeDateResp);
-    return ({
-      statusCode: constants.SUCCESS,
-      result: util.getResultArrayfromBlockChainResult(getIpLetterNoticeDateResp)
-    });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICES_BY_DATE, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-
-
-
-/**
- * This method will acknowledge Ip notice.
+ * This method will process Ip letters.
  * @param {*} req 
  * @param {*} res 
  */
 
 async function processIpLetters(req, res) {
+  
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.ACKNOWLEDGE_IP_NOTICE);
   try {
+    
     var reqIdWithComma = req.swagger.params['requestId'].value;
     logger.info('reqIdWithComma ...', reqIdWithComma);
     var reqIdArray = reqIdWithComma.split(',');
     logger.info('reqIdArray ...', reqIdArray, reqIdArray.length);
     for (var i = 0; i < reqIdArray.length; i++) {
-      var requestId = reqIdArray[i];   //mortgageNumber
+      var requestId = reqIdArray[i];  
       logger.info('requestId ...', requestId);
       var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
       var peerName = util.getPeerName(req.auth.orgName);
@@ -657,7 +185,7 @@ async function processIpLetters(req, res) {
       var schemaNameIp = "IpLetter";
      // find mortgageNumber from ipletter
       var getIPletterMortgageNumberResp = await chaincodeService.queryChainCodeThreeArgs(fabricToken, requestId.trim(), bankId, schemaNameIp, chaincodeName, chaincodeFunctionNameIpLetter, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-     console.log('getIPletterMortgageNumberResp------------>', getIPletterMortgageNumberResp  , getIPletterMortgageNumberResp.length);
+      console.log('getIPletterMortgageNumberResp------------>', getIPletterMortgageNumberResp  , getIPletterMortgageNumberResp.length);
       if (getIPletterMortgageNumberResp != 0) {
         var mortgageNumber = getIPletterMortgageNumberResp[0].Record.mortgageNumber;
         logger.info('mortgageNumber---> ', mortgageNumber);
@@ -688,12 +216,45 @@ async function processIpLetters(req, res) {
             var chaincodeFunctionNameip = configData.chaincodes.canadianInsuranceInfo.functions.addIpLetter;
             var ipletterupdateResp = await chaincodeService.invokeChainCode(fabricToken, JSON.stringify(getIPletterMortgageNumberResp[0].Record), chaincodeName, chaincodeFunctionNameip, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
             logger.info('ipletterupdateResp', ipletterupdateResp);
-
+            if(ipletterupdateResp){
+            var blockData = await chaincodeService.queryBlockByTransactionId(req.auth.fabricToken, ipletterupdateResp, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+            var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
+            var blockNumber = blockData.header.number.toString();
+            var reqTransactionData = {
+              transactionId: ipletterupdateResp,
+              blockchainTimeStamp: timestamp,
+              transactionType: 'updateIpLetter',
+              blockNo: blockNumber,
+              actor: req.auth.orgName,
+              actorReference: getIPletterMortgageNumberResp[0].Record.insuranceProvider,         //loanJson.insuranceProvider,
+              createdBy: req.auth.sub,
+              referenceNumber : mortgageNumber
+            }
+            console.log("reqTransactionData=========>", reqTransactionData);
+            var transData = await transactionService.addTransaction(reqTransactionData);
+            logger.info("transData=============", transData);
+            }
             // update policyno in loan from policyno from ipletter
             logger.info('getMortgageNumberResp[0].Record.mortgageNumber', getMortgageNumberResp[0].Record.mortgageNumber);
             logger.info('getIPletterMortgageNumberResp[0].Record.mortgageNumber', getIPletterMortgageNumberResp[0].Record.mortgageNumber);
             if (getMortgageNumberResp[0].Record.mortgageNumber == getIPletterMortgageNumberResp[0].Record.mortgageNumber) {
+             //update loan 
               getMortgageNumberResp[0].Record.policyNumber = getIPletterMortgageNumberResp[0].Record.policyNumber;
+              getMortgageNumberResp[0].Record.policyStatus = getIPletterMortgageNumberResp[0].Record.policyStatus;
+              getMortgageNumberResp[0].Record.policyExpiringdate = getIPletterMortgageNumberResp[0].Record.policyExpiringdate;
+              getMortgageNumberResp[0].Record.loanAmount = getIPletterMortgageNumberResp[0].Record.loanAmount;
+              getMortgageNumberResp[0].Record.insuredvalue = getIPletterMortgageNumberResp[0].Record.insuredvalue;
+              getMortgageNumberResp[0].Record.propertyID = getIPletterMortgageNumberResp[0].Record.propertyID;
+              var transactionId = util.generateId(constants.TRANSACTION_ID);
+
+              getMortgageNumberResp[0].Record.transaction.push({
+                "transactionId": transactionId,
+                "transactionTimeStamp": new Date(),
+                "transactionType": "UpdateLoan",
+                "actor": req.auth.orgName,
+                "actorReference": getMortgageNumberResp[0].Record.insuranceProvider
+              });
+
               logger.info('getPolicyNumberResp[0].Record---->', getMortgageNumberResp[0].Record);
               var chaincodeFunctionNameAddLoan = configData.chaincodes.canadianInsuranceInfo.functions.addLoan;
               var loanupdateResp = await chaincodeService.invokeChainCode(fabricToken, JSON.stringify(getMortgageNumberResp[0].Record), chaincodeName, chaincodeFunctionNameAddLoan, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
@@ -713,6 +274,24 @@ async function processIpLetters(req, res) {
                 logger.info('getIPletterMortgageNumberResp01---------->', JSON.stringify(getIPletterMortgageNumberResp[0].Record));
                 var ipletterupdateResp1 = await chaincodeService.invokeChainCode(fabricToken, JSON.stringify(getIPletterMortgageNumberResp[0].Record), chaincodeName, chaincodeFunctionNameip, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
                 logger.info('ipletterupdateResp1 :', ipletterupdateResp1);
+				if(ipletterupdateResp1){
+                  var blockData = await chaincodeService.queryBlockByTransactionId(req.auth.fabricToken, ipletterupdateResp1, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+                  var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
+                  var blockNumber = blockData.header.number.toString();
+                  var reqTransactionData = {
+                    transactionId: ipletterupdateResp1,
+                    blockchainTimeStamp: timestamp,
+                    transactionType: 'updateIpLetter',
+                    blockNo: blockNumber,
+                    actor: req.auth.orgName,
+                    actorReference: getIPletterMortgageNumberResp[0].Record.insuranceProvider,     //loanJson.insuranceProvider,
+                    createdBy: req.auth.sub,
+                    referenceNumber : mortgageNumber
+                  }
+                  console.log("reqTransactionData=========>", reqTransactionData);
+                  var transData = await transactionService.addTransaction(reqTransactionData);
+                  logger.info("transData=============", transData);
+                  }
               }
             }
           } else {
@@ -731,6 +310,24 @@ async function processIpLetters(req, res) {
             var chaincodeFunctionNameip = configData.chaincodes.canadianInsuranceInfo.functions.addIpLetter;
             var ipletterupdateResp = await chaincodeService.invokeChainCode(fabricToken, JSON.stringify(getIPletterMortgageNumberResp[0].Record), chaincodeName, chaincodeFunctionNameip, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
             logger.info('ipletterupdateResp unmatch : -> ', ipletterupdateResp);
+			  if(ipletterupdateResp){
+              var blockData = await chaincodeService.queryBlockByTransactionId(req.auth.fabricToken, ipletterupdateResp, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+              var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
+              var blockNumber = blockData.header.number.toString();
+              var reqTransactionData = {
+                transactionId: ipletterupdateResp,
+                blockchainTimeStamp: timestamp,
+                transactionType: 'updateIpLetter',
+                blockNo: blockNumber,
+                actor: req.auth.orgName,
+                actorReference:getIPletterMortgageNumberResp[0].Record.insuranceProvider,      //loanJson.insuranceProvider,
+                createdBy: req.auth.sub,
+                referenceNumber : mortgageNumber
+              }
+              console.log("reqTransactionData=========>", reqTransactionData);
+              var transData = await transactionService.addTransaction(reqTransactionData);
+              logger.info("transData=============", transData);
+              }
 
           }
 
@@ -753,6 +350,24 @@ async function processIpLetters(req, res) {
           var chaincodeFunctionNameip = configData.chaincodes.canadianInsuranceInfo.functions.addIpLetter;
           var ipletterupdateResp = await chaincodeService.invokeChainCode(fabricToken, JSON.stringify(getIPletterMortgageNumberResp[0].Record), chaincodeName, chaincodeFunctionNameip, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
           logger.info('ipletterupdateResp unmatch : -> ', ipletterupdateResp);
+		   if(ipletterupdateResp){
+            var blockData = await chaincodeService.queryBlockByTransactionId(req.auth.fabricToken, ipletterupdateResp, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+            var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
+            var blockNumber = blockData.header.number.toString();
+            var reqTransactionData = {
+              transactionId: ipletterupdateResp,
+              blockchainTimeStamp: timestamp,
+              transactionType: 'updateIpLetter',
+              blockNo: blockNumber,
+              actor: req.auth.orgName,
+              actorReference:getIPletterMortgageNumberResp[0].Record.insuranceProvider,      //loanJson.insuranceProvider,
+              createdBy: req.auth.sub,
+              referenceNumber : mortgageNumber
+            }
+            console.log("reqTransactionData=========>", reqTransactionData);
+            var transData = await transactionService.addTransaction(reqTransactionData);
+            logger.info("transData=============", transData);
+            }
         }
       } else {
         return ({
@@ -771,33 +386,110 @@ async function processIpLetters(req, res) {
 }
 
 
+/**
+ * This method will get ip notice count of bank by notice date range.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getIpLetterCountByBankNNoticeDate(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPLETTER_COUNT_BY_BANKNNOTICEDATE);
+  try {
+    var noOfDays = req.swagger.params['days'].value;
+    var peerName = util.getPeerName(req.auth.orgName);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterCountByNoticeDateAndBankId;
+    var result = [];
+    var awaitResults = [];
+    var authOwnerId = req.auth.orgName;
+    for (var i = 0; i < noOfDays; i++) {
+      var noticeDate1 = moment().subtract(i, 'days').format('YYYY-MM-DD');
+      var noticeDate = noticeDate1 + " 00:00:00"
+      logger.info("noticeDate=========>", noticeDate);
+      result[i] = chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, noticeDate.toString().trim(), authOwnerId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      awaitResults[i] = result[i];
+    }
+    var finalJson = await Promise.all(awaitResults).then((res) => {
+      logger.info("final res=>", res);
+      return res;
+    });
+    if (finalJson) {
+      return ({
+        statusCode: constants.SUCCESS,
+        result: "Success",
+        transactionId: finalJson
+      });
+    } else {
+      return ({
+        statusCode: constants.INTERNAL_SERVER_ERROR,
+        result: constants.MESSAGE_500
+      });
+
+    }
+  } catch (error) {
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPLETTER_COUNT_BY_BANKNNOTICEDATE, error);
+    return ({
+      code: constants.INTERNAL_SERVER_ERROR,
+      message: constants.MESSAGE_500
+    })
+  }
+}
 
 /**
- * This method will get expired policy
+ * This method will get Ip Letter details by Bank And notice date.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getIpLetterDetailsByBankNDate(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPLETTER_DETAILS_BY_BANKNDATE);
+  try {
+    var noticeDate = req.swagger.params['noticeDate'].value + " 00:00:00";
+    var peerName = util.getPeerName(req.auth.orgName);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByNoticeDate;
+    var schemaName = "IpLetter";
+    var bankId = req.auth.orgName;
+    var getIpLetterNoticeDateResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, noticeDate.toString().trim(), bankId, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if(getIpLetterNoticeDateResp.length>0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: util.getResultArrayfromBlockChainResult(getIpLetterNoticeDateResp)
+      });
+    else
+    return ({
+      statusCode: constants.NO_CONTENT,
+      result : MESSAGE_204
+     });
+  } catch (error) {
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPLETTER_DETAILS_BY_BANKNDATE, error);
+    return ({
+      code: constants.INTERNAL_SERVER_ERROR,
+      message: constants.MESSAGE_500
+    })
+  }
+}
+
+
+/**
+ * This method will get expiring IP letter count of next n days by insurer
+ *  and expire date range.
  * @param {*} req 
  * @param {*} res 
  */
 
 async function getExpiringIpLetterCountOfNdaysByInsurerNDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_POLICIES_EXPIRING);
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRING_IPLETTER_COUNT_OFNDAYS_BY_INSURERNDATE);
   try {
 
     var daysValue = req.swagger.params['days'].value;
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
     var peerName = util.getPeerName(req.auth.orgName);
-    var fabricToken = req.auth.fabricToken;
     var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpPoliciesExpiringByDateRangeAndBankId;
-    logger.info('chaincodeFunctionName:::', chaincodeFunctionName);
-    var n = parseInt(daysValue); //number of days to add. 
     var dateFrom1 = moment().format('YYYY-MM-DD');
     var dateFrom = dateFrom1 + " 23:59:59";
-    var dateTo1 = moment().add(n, 'days').format('YYYY-MM-DD');
+    var dateTo1 = moment().add(parseInt(daysValue), 'days').format('YYYY-MM-DD');
     var dateTo = dateTo1 + " 23:59:59";
     logger.info('dateFrom : ,dateTo :  -----> ', dateFrom, dateTo);
-    var schemaName = "IpLetter";
     var bankId = req.auth.orgName;
-    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), schemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info('getIpLetterExpiredPoliciesByDateResp--->', getIpLetterExpiredPoliciesByDateResp);
+    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), ipLetterSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
     var myObject = {};
     for (var i = 0; i < getIpLetterExpiredPoliciesByDateResp.length; i++) {
       var key = getIpLetterExpiredPoliciesByDateResp[i].Record.insuranceProvider
@@ -808,15 +500,12 @@ async function getExpiringIpLetterCountOfNdaysByInsurerNDate(req, res) {
         myObject[key] = 1;
       }
     }
-    logger.info('myObject---->', myObject);
-    logger.info("ttttttttttttttttttttttttt",convertData(getIpLetterExpiredPoliciesByDateResp, "insuranceProvider"));
     return ({
       statusCode: constants.SUCCESS,
-      //result: myObject
-      result: convertData(getIpLetterExpiredPoliciesByDateResp, "insuranceProvider")
+      result: util.convertData(getIpLetterExpiredPoliciesByDateResp, constants.INSURANCE_PROVIDER)
     });
   } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_POLICIES_EXPIRING, error);
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRING_IPLETTER_COUNT_OFNDAYS_BY_INSURERNDATE, error);
     return ({
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500
@@ -824,38 +513,108 @@ async function getExpiringIpLetterCountOfNdaysByInsurerNDate(req, res) {
   }
 }
 
-function convertData(data, keyName) {
-    let objArry = [];
-    let keyArr = [];
-    for(let index=0; index < data.length; index++) {
-      const key = data[index].Record[keyName];
-      if(key) {
-        if (keyArr.indexOf(key) === -1) {
-          keyArr.push(key);
-          objArry.push({
-            insurer: key,
-            count: 1
-          });
-        } else {
-          const keyIndex = keyArr.indexOf(key);
-          objArry[keyIndex] = {
-            insurer: objArry[keyIndex].insurer,
-            count: objArry[keyIndex].count + 1 
-          }
-        }
+/**
+ * This method will get expiring IP leter details of next n days
+ * by expringdate range.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getExpiringIpLetterDetailsByDateRange(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRING_IPLETTER_DETAILS_BY_DATERANGE);
+  try {
+    var insurerName = req.swagger.params['insurerName'].value;
+    var peerName = util.getPeerName(req.auth.orgName);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpnoticebyExpireDateRangeAndInsurer;
+    var dateFrom1 = moment().format('YYYY-MM-DD');
+    var dateFrom = dateFrom1 + " 00:00:00";
+    var dateTo1 = moment().add(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
+    var dateTo = dateTo1 + " 00:00:00";
+    var bankId = req.auth.orgName;
+    var getIpLetterNoticeDateResp = await chaincodeService.queryChainCodeFiveArgs(req.auth.fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), insurerName.trim(), bankId, ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if(getIpLetterNoticeDateResp.length>0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: util.getResultArrayfromBlockChainResult(getIpLetterNoticeDateResp)
+             });
+    else
+    return ({
+      statusCode: constants.NO_CONTENT,
+      result : MESSAGE_204
+     });
+     
+  } catch (error) {
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRING_IPLETTER_DETAILS_BY_DATERANGE, error);
+    return ({
+      code: constants.INTERNAL_SERVER_ERROR,
+      message: constants.MESSAGE_500
+    })
+  }
+}
+
+
+
+/**
+ * This method will get expired  ip letter count of last n days by bank and 
+ * expring date range.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getExpiredIpCountOfLastNDaysByBankNDate(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IP_COUNT_OF_LAST_NDAYS_BY_BANKNDATE);
+  try {
+    var peerName = util.getPeerName(req.auth.orgName);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpPoliciesExpiringByDateRangeAndBankId;
+    var noOfDays = req.swagger.params['days'].value;
+    var fromExpiredDate1 = moment().subtract(noOfDays, 'days').format('YYYY-MM-DD');
+    var fromExpiredDate = fromExpiredDate1 + " 23:59:59";
+    var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
+    var toExpiredDate = toExpiredDate1 + " 23:59:59";
+    logger.info("fromExpiredDate=========>", fromExpiredDate);
+    logger.info("toExpiredDate=========>", toExpiredDate);
+    var bankId = req.auth.orgName;
+    var getExpiredPolicyResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), ipLetterSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    var myObject = {};
+    for (var i = 0; i < getExpiredPolicyResp.length; i++) {
+      var key = getExpiredPolicyResp[i].Record.policyExpiringDate;
+      if (myObject.hasOwnProperty(key)) {
+        myObject[key] += 1;
+      } else {
+        myObject[key] = 1;
       }
     }
-  return objArry;    
+    if (myObject) {
+      return ({
+        statusCode: constants.SUCCESS,
+        result: "Success",
+        result: util.convertData(getExpiredPolicyResp,constants.POLICY_EXPIRING_DATE)
+      });
+    } else {
+      return ({
+        statusCode: constants.INTERNAL_SERVER_ERROR,
+        result: constants.MESSAGE_500
+      });
+
+    }
+  } catch (error) {
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IP_COUNT_OF_LAST_NDAYS_BY_BANKNDATE, error);
+    return ({
+      code: constants.INTERNAL_SERVER_ERROR,
+      message: constants.MESSAGE_500
+    })
+  }
 }
 
 /**
- * This method will get expired policy
+ * This method will get expired IP lettter by bank 
+ * and expire date.
  * @param {*} req 
  * @param {*} res 
  */
 
 async function getExpiredIPLetterByBankNDate(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_POLICIES_BY_DATE);
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE);
   try {
 
     var dateValue1 = req.swagger.params['date'].value;
@@ -863,25 +622,26 @@ async function getExpiredIPLetterByBankNDate(req, res) {
     logger.info('dateValue.....', dateValue);
     var peerName = util.getPeerName(req.auth.orgName);
     var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpExpiredPoliciesByDateAndBankId;
-    logger.info('chaincodeFunctionName:::', chaincodeFunctionName);
-    var schemaName = "IpLetter";
     var bankId = req.auth.orgName;
-    // find mortgageNumber from loan
-    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateValue.toString().trim(), schemaName, bankId, "", chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info('getIpLetterExpiredPoliciesByDateResp: ', getIpLetterExpiredPoliciesByDateResp);
+    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateValue.toString().trim(), ipLetterSchemaName, bankId, "", chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if(getIpLetterExpiredPoliciesByDateResp.length>0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: getIpLetterExpiredPoliciesByDateResp
+      });
+    else
     return ({
-      statusCode: constants.SUCCESS,
-      result: getIpLetterExpiredPoliciesByDateResp
-    });
+      statusCode: constants.NO_CONTENT,
+      result : MESSAGE_204
+     });
   } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_POLICIES_BY_DATE, error);
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE, error);
     return ({
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500
     })
   }
 }
-
 
 /**
  * This method will get expired policy
@@ -890,25 +650,25 @@ async function getExpiredIPLetterByBankNDate(req, res) {
  */
 
 async function listBankIPLettersByBankNlimit(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_IP_NOTICES);
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_BANK_IPLETTERS_BY_BANK_N_LIMIT);
   try {
     var count = req.swagger.params['count'].value;
     var peerName = util.getPeerName(req.auth.orgName);
     var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.listIPNotices;
-    var schemaName = "IpLetter";
-    var getIpNoticeResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken,schemaName, count.toString(),"" , chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    if (getIpNoticeResp)
+    var bankId = req.auth.orgName;
+    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, ipLetterSchemaName,bankId, count.toString(), "", chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if (getIpNoticeResp.length>0)
       return ({
         statusCode: constants.SUCCESS,
         result: getIpNoticeResp
       });
     else
-      return ({
-        statusCode: constants.SUCCESS,
-        result: constants.MESSAGE_204
-      });
+    return ({
+      statusCode: constants.NO_CONTENT,
+      result : MESSAGE_204
+     });
   } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_IP_NOTICES, error);
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_BANK_IPLETTERS_BY_BANK_N_LIMIT, error);
     return ({
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500
@@ -916,81 +676,34 @@ async function listBankIPLettersByBankNlimit(req, res) {
   }
 }
 
-
-
 /**
- * This method will get expired policy
- * @param {*} req 
- * @param {*} res 
- */
-
-async function searchIPNotices(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES);
-  if(req.auth.orgName==constants.IRM){
-  try {
-    var peerName = util.getPeerName(req.auth.orgName);
-    var attributeName = req.swagger.params['attributeName'].value;
-    var attributeValue = req.swagger.params['attributeValue'].value;
-    logger.info("attributeName==attributeValue==", attributeName, "=attributeValue=", attributeValue);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.searchIPNotices;
-    var schemaName = "IpLetter";
-    var getIpNoticeResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, attributeName, attributeValue, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    if (getIpNoticeResp)
-      return ({
-        statusCode: constants.SUCCESS,
-        result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
-      });
-    else
-      return ({
-        statusCode: constants.SUCCESS,
-        result: constants.MESSAGE_204
-      });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}else
-return ({
-  statusCode: constants.SUCCESS,
-  result: "Invalid Org Name"
-});
-}
-
-
-
-/**
- * This method will get expired policy
+ * This method will Search ip notices by bank.
  * @param {*} req 
  * @param {*} res 
  */
 
 async function searchIPNoticesByBank(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES);
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IPNOTICES_BY_BANK);
   try {
     var peerName = util.getPeerName(req.auth.orgName);
     var attributeName = req.swagger.params['attributeName'].value;
     var attributeValue = req.swagger.params['attributeValue'].value;
-    //var bankId=req.auth.sub;
     var bankId = req.auth.orgName;
     logger.info("attributeName==attributeValue==", attributeName, "=attributeValue=", attributeValue);
     var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.searchIPNoticesByBank;
-    var schemaName = "IpLetter";
-    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, attributeName, attributeValue, schemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    if (getIpNoticeResp)
+    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, attributeName, attributeValue, ipLetterSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if (getIpNoticeResp.length>0)
       return ({
         statusCode: constants.SUCCESS,
         result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
       });
     else
-      return ({
-        statusCode: constants.SUCCESS,
-        result: constants.MESSAGE_204
-      });
+    return ({
+      statusCode: constants.NO_CONTENT,
+      result : MESSAGE_204
+     });
   } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES, error);
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IPNOTICES_BY_BANK, error);
     return ({
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500
@@ -999,86 +712,48 @@ async function searchIPNoticesByBank(req, res) {
 }
 
 /**
- * This method will get expired policy
+ * This method will upload IP letters by service provider IRM.
  * @param {*} req 
  * @param {*} res 
  */
 
-async function searchIPNoticesByInsurer(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES);
-  try {
-    var peerName = util.getPeerName(req.auth.orgName);
-    var attributeName = req.swagger.params['attributeName'].value;
-    var attributeValue = req.swagger.params['attributeValue'].value;
-    var insurerName = req.swagger.params['insurerName'].value;
-    logger.info("attributeName==attributeValue==", attributeName, "=attributeValue=", attributeValue);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.searchIPNoticeByInsurer;
-    var schemaName = "IpLetter";
-    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, attributeName, attributeValue, schemaName, insurerName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    if (getIpNoticeResp)
+async function uploadIpLetters(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPLOAD_IP_LETTERS);
+  if (req.auth.orgName == constants.IRM || testMode) {
+    try {
+      var uploadFilePath = await getUploadZipFilePath(req, res);
+      logger.info('uploadFilePath---->', uploadFilePath);
+      var jsonDataFromXML = await readZipFile(uploadFilePath, req, res);
+      logger.info('jsonDataFromXML2---> ', jsonDataFromXML);
       return ({
         statusCode: constants.SUCCESS,
-        result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
+        result: "Files uploaded Successully"
       });
-    else
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPLOAD_IP_LETTERS, error);
       return ({
-        statusCode: constants.SUCCESS,
-        result: constants.MESSAGE_204
-      });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES, error);
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else {
     return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-
-
-
-/**
- * This method will get expired policy
- * @param {*} req 
- * @param {*} res 
- */
-
-async function 
-uploadIpLetters(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPLOAD_IP_NOTICES);
-  console.log(req.auth.orgName ,constants.IRM );
-  if(req.auth.orgName==constants.IRM){
-  try {
-    var accessControlId = util.generateId(constants.ACCESSCONTROL);
-    var uploadFilePath = await getUploadZipFilePath(req, res);
-    console.log('uploadFilePath---->', uploadFilePath);
-    var jsonDataFromXML = await readZipFile(uploadFilePath, req, res);
-    console.log('jsonDataFromXML2---> ', jsonDataFromXML);
-    return ({
-      statusCode: constants.SUCCESS,
-      result: constants.SUCCESS
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
     });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPLOAD_IP_NOTICES, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
   }
 }
-else{
-  return ({
-    statusCode: constants.SUCCESS,
-    result: "Invalid Org Name"
-  });
-}
-}
 
-
+/**
+ * This method will upload zip file
+ * @param {*} req 
+ * @param {*} res 
+ */
 
 async function getUploadZipFilePath(req, res) {
-
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_UPLOAD_ZIP_FILE_PATH);
   const uploadIPNotices = req.files.uploadIPNotices;
-  console.log('uploadIPNotices-->', uploadIPNotices);
+  logger.info('uploadIPNotices-->', uploadIPNotices);
   var fileName = uuidV1();
   var filePath = '';
   let path = configData.CANADIAN_INSURANCE_FILE_LOCATION + fileName;
@@ -1087,38 +762,44 @@ async function getUploadZipFilePath(req, res) {
     fs.mkdirSync(path);
   }
   uploadIPNotices.forEach(function (file) {
-    console.log('getUploadZipFilePath : file--->', file);
+    logger.info('getUploadZipFilePath : file--->', file);
     var datetimestamp = Date.now();
     var inputString = file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1];
     fs.writeFile(path + '/' + inputString, file.buffer, function (err) {
       if (err) {
         debug(err);
         var err = {
-          message: 'File not uploaded'
+          message: constants.File_Not_Uploaded
         };
       }
     });
     filePath = path + '/' + inputString;
-    console.log('filePath....jszip--->', path);
+    logger.info('filePath....jszip--->', path);
 
   });
 
   return filePath;
 }
 
+/**
+ * This method will read IP letter xml file
+ * from zip folder.
+ * @param {*} filePath 
+ * @param {*} req 
+ * @param {*} res 
+ */
+
 async function readZipFile(filePath, req, res) {
-  console.log('read fPath--> ', filePath);
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.READ_ZIP_FILE);
+  logger.info('read fPath--> ', filePath);
   var arrayData = [];
-  // var jsonFromXML ='';
   fs.readFile(filePath, function (err, data) {
     if (err) throw err;
     JSZip.loadAsync(data).then(function (zip) {
       var files = Object.keys(zip.files);
-      console.log('files---------->', files);
+      logger.info('files---------->', files);
       files.forEach(function (file) {
         zip.file(file).async("string").then(function (data) {
-          // data is "Hello World!"
-          // console.log('data ---->', data);
           var jsonFromXML = convert.xml2json(data, {
             compact: true,
             trim: true,
@@ -1130,10 +811,8 @@ async function readZipFile(filePath, req, res) {
             ignoreDoctype: true,
             textFn: removeJsonTextAttribute
           }); //JSON.parse(parser.toJson(data, {reversible: true}));
-
           arrayData.push(jsonFromXML);
-          // console.log('--------------------', arrayData);
-          console.log('------jsonFromXML--------------', jsonFromXML);
+          logger.info('------jsonFromXML--------------', jsonFromXML);
           chainCodeCall(jsonFromXML, req, res);
 
         });
@@ -1145,56 +824,61 @@ async function readZipFile(filePath, req, res) {
   return arrayData;
 }
 
+/**
+ * This method will call chain code.
+ * from zip folder.
+ * @param {*} jsonFromXML 
+ * @param {*} req 
+ * @param {*} res 
+ */
+
 
 async function chainCodeCall(jsonFromXML, req, res) {
-  var authOwnerId = req.auth.sub;
   var transactionId = util.generateId(constants.TRANSACTION_ID);
   //  for chain code 
   var requestBody1 = JSON.parse(jsonFromXML).ipletter;
   logger.info("req.auth.orgName : , requestBody1.bankId :   ", req.auth.orgName, requestBody1.bankId);
   //if (req.auth.orgName == requestBody1.bankId.trim()) {
-    requestBody1["requestId"] =  requestBody1.bankId + "-" + requestBody1.mortgageNumber;
-    requestBody1["schemaName"] = "IpLetter";
-    requestBody1["transaction"] = [{
-      "transactionId": transactionId,
-      "transactionTimeStamp": new Date(),
-      "transactionType": "addIPNotices",
-      "actor": req.auth.orgName,
-      "actorReference": requestBody1.insuranceProvider,
-      "additionalTags": ""
-    }]
-    logger.info('requestBody1:  ', requestBody1);
-    var requestBody = JSON.stringify(requestBody1);
-    logger.info('requestBody:  ', requestBody);
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.addIpLetter;
-    logger.info('chaincodeFunctionName:   ', chaincodeFunctionName);
-    var insuranceFileResp = await chaincodeService.invokeChainCode(req.auth.fabricToken, requestBody, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info("insuranceFileResp---->", insuranceFileResp);
-    if (insuranceFileResp == "") {
-      return ({
-        statusCode: constants.NO_CONTENT,
-        result: constants.MESSAGE_500
-      });
-    } else {
-      var blockData = await chaincodeService.queryBlockByTransactionId(req.auth.fabricToken, insuranceFileResp, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-      var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
-      var blockNumber = blockData.header.number.toString();
-      var reqTransactionData = {
-        transactionId: insuranceFileResp,
-        dateTime: timestamp,
-        transactionType: 'addIPLetter',
-        blockno: blockNumber,
-        actor: req.auth.orgName,
-        actorReference: requestBody1.insuranceProvider,
-        createdBy: req.auth.sub
-      }
-      logger.info("reqTransactionData=========>", reqTransactionData);
-      var transData = await transactionService.addTransaction(reqTransactionData);
-      logger.info("transData=============", transData);
+  requestBody1["requestId"] = requestBody1.bankId + "-" + requestBody1.mortgageNumber;
+  requestBody1["schemaName"] = "IpLetter";
+  requestBody1["transaction"] = [{
+    "transactionId": transactionId,
+    "transactionTimeStamp": new Date(),
+    "transactionType": "addIPNotices",
+    "actor": req.auth.orgName,
+    "actorReference": requestBody1.insuranceProvider,
+    "additionalTags": ""
+  }]
+  logger.info('requestBody1:  ', requestBody1);
+  var requestBody = JSON.stringify(requestBody1);
+  logger.info('requestBody:  ', requestBody);
+  // var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
+  var peerName = util.getPeerName(req.auth.orgName);
+  var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.addIpLetter;
+  var insuranceFileResp = await chaincodeService.invokeChainCode(req.auth.fabricToken, requestBody, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+  if (insuranceFileResp.length<=0) {
+    return ({
+      statusCode: constants.NO_CONTENT,
+      result: constants.MESSAGE_204
+    });
+  } else {
+    var blockData = await chaincodeService.queryBlockByTransactionId(req.auth.fabricToken, insuranceFileResp, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
+    var blockNumber = blockData.header.number.toString();
+    var reqTransactionData = {
+      transactionId: insuranceFileResp,
+      dateTime: timestamp,
+      transactionType: 'addIPLetter',
+      blockno: blockNumber,
+      actor: req.auth.orgName,
+      actorReference: requestBody1.insuranceProvider,
+      createdBy: req.auth.sub
     }
- // }
+    logger.info("reqTransactionData=========>", reqTransactionData);
+    var transData = await transactionService.addTransaction(reqTransactionData);
+    logger.info("transData=============", transData);
+  }
+  // }
 
 }
 
@@ -1220,46 +904,50 @@ var removeJsonTextAttribute = function (value, parentElement) {
   } catch (e) {}
 }
 
-
-
-/** 
- * 
- * 
+/**
+ * This method will update unmatch notices
+ * @param {*} req 
+ * @param {*} res 
  */
 
+
 async function updateUnmatchIPNotices(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPLOAD_IP_NOTICES);
-  if(req.auth.orgName==constants.IRM){
-  try {
-    var accessControlId = util.generateId(constants.ACCESSCONTROL);
-    var uploadFilePath = await getUpdateZipFilePath(req, res);
-    logger.info('uploadFilePath---->', uploadFilePath);
-    var jsonDataFromXML = await updateReadZipFile(uploadFilePath, req, res);
-    logger.info('jsonDataFromXML2---> ', jsonDataFromXML);
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPDATE_UNMATCH_IPNOTICES);
+  if (req.auth.orgName == constants.IRM || testMode) {
+    try {
+      var uploadFilePath = await getUpdateZipFilePath(req, res);
+      logger.info('uploadFilePath---->', uploadFilePath);
+      var jsonDataFromXML = await updateReadZipFile(uploadFilePath, req, res);
+      logger.info('jsonDataFromXML2---> ', jsonDataFromXML);
+      return ({
+        statusCode: constants.SUCCESS,
+        result: "file uploaded successfully"
+      });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPDATE_UNMATCH_IPNOTICES, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else {
     return ({
-      statusCode: constants.SUCCESS,
-      result: constants.SUCCESS
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
     });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPLOAD_IP_NOTICES, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
   }
-}else{
-  return ({
-    statusCode: constants.SUCCESS,
-    result: "Invalid Org Name"
-  });
-}
 }
 
+/**
+ * This method will Zip file path
+ * @param {*} req 
+ * @param {*} res 
+ */
 
 async function getUpdateZipFilePath(req, res) {
-
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_UPDATE_ZIP_FILE_PATH);
   const uploadIPNotices = req.files.updateUnmatchIPNotices;
-  console.log('uploadIPNotices-->', uploadIPNotices);
+  logger.info('uploadIPNotices-->', uploadIPNotices);
   var fileName = uuidV1();
   var filePath = '';
   let path = configData.CANADIAN_INSURANCE_FILE_LOCATION + fileName;
@@ -1268,7 +956,7 @@ async function getUpdateZipFilePath(req, res) {
     fs.mkdirSync(path);
   }
   uploadIPNotices.forEach(function (file) {
-    console.log('getUploadZipFilePath : file--->', file);
+    logger.info('getUploadZipFilePath : file--->', file);
     var datetimestamp = Date.now();
     var inputString = file.fieldname + '-' + datetimestamp + '.' + file.originalname.split('.')[file.originalname.split('.').length - 1];
     fs.writeFile(path + '/' + inputString, file.buffer, function (err) {
@@ -1280,18 +968,23 @@ async function getUpdateZipFilePath(req, res) {
       }
     });
     filePath = path + '/' + inputString;
-    console.log('filePath....jszip--->', path);
+    logger.info('filePath....jszip--->', path);
 
   });
 
   return filePath;
 }
 
+/**
+ * This method will  read files under  Zip file
+ * @param {*} req 
+ * @param {*} res 
+ */
 
 async function updateReadZipFile(filePath, req, res) {
-  console.log('read fPath--> ', filePath);
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPDATE_READ_ZIP_FILE);
+  logger.info('read fPath--> ', filePath);
   var arrayData = [];
-  // var jsonFromXML ='';
   fs.readFile(filePath, function (err, data) {
     if (err) throw err;
     JSZip.loadAsync(data).then(function (zip) {
@@ -1319,13 +1012,18 @@ async function updateReadZipFile(filePath, req, res) {
     });
 
   });
-
   return arrayData;
 }
 
+/**
+ * This method will  will update Ip letter
+ * @param {*} req 
+ * @param {*} res 
+ */
+
 
 async function updateChainCodeCall(jsonFromXML, req, res) {
-  var authOwnerId = req.auth.sub;
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.UPDATE_CHAINCODE_CALL);
   var transactionId = util.generateId(constants.TRANSACTION_ID);
   //  for chain code 
   var requestBody1 = JSON.parse(jsonFromXML).ipletter;
@@ -1334,7 +1032,7 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
   requestBody1["transaction"] = [{
     "transactionId": transactionId,
     "transactionTimeStamp": new Date(),
-    "transactionType": "updateIPNotices",
+    "transactionType": "updateIPNotice",
     "actor": req.auth.orgName,
     "actorReference": requestBody1.insuranceProvider,
     "additionalTags": ""
@@ -1345,17 +1043,11 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
   logger.info('requestBody1:  ', requestBody1);
   var requestBody = JSON.stringify(requestBody1);
   logger.info('requestBody:  ', requestBody);
-  var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-  logger.info('chaincodeName: ', chaincodeName);
   var peerName = util.getPeerName(req.auth.orgName);
-  logger.info('peerName: ', peerName);
-  var schemaName = "IpLetter";
-  //find req id 
   var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterByRequestId;
-  logger.info('chaincodeFunctionName:   ', chaincodeFunctionName);
-  var getIpLetterReqIdResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, requestId.trim(), schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-  logger.info("getIpLetterReqIdResp................", getIpLetterReqIdResp);
-  if (getIpLetterReqIdResp != 0) {
+  var getIpLetterReqIdResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, requestId.trim(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+  console.log("getIpLetterReqIdResp--->", getIpLetterReqIdResp);
+  if (getIpLetterReqIdResp.length>0) {
     //  getIpLetterReqIdResp[0].Record.requestId =  requestBody1["requestId"];
     getIpLetterReqIdResp[0].Record.mortgageNumber = requestBody1["mortgageNumber"];
     getIpLetterReqIdResp[0].Record.insuranceProvider = requestBody1["insuranceProvider"];
@@ -1395,12 +1087,12 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
     }
     return ({
       statusCode: constants.NO_CONTENT,
-      result: ipletterupdateResp
+      result: constants.MESSAGE_204
     });
 
   }
 
-  if (getIpLetterReqIdResp == "") {
+  if (getIpLetterReqIdResp.length<=0) {
     return ({
       statusCode: constants.NO_CONTENT,
       result: constants.MESSAGE_500
@@ -1417,77 +1109,477 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
 
 async function listUnmatchedNotices(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_UNMATCHED_NOTICES);
-  if(req.auth.orgName=constants.IRM){
-  try {
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var fabricToken = req.auth.fabricToken;
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getListUnmatchedNotices;
-    var schemaName = "IpLetter";
-    var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(fabricToken, "", schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    console.log('getUnmatchedResp----> ', getUnmatchedResp);
+  if (req.auth.orgName = constants.IRM || testMode)  {
+    try {
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getListUnmatchedNotices;
+      var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, "", ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      if(getUnmatchedResp.length>0)
+        return ({
+          statusCode: constants.SUCCESS,
+          result: util.getResultArrayfromBlockChainResult(getUnmatchedResp)
+        });
+      else
+      return ({
+        statusCode: constants.NO_CONTENT,
+        result: constants.MESSAGE_204
+      });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_UNMATCHED_NOTICES, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
     return ({
-      statusCode: constants.SUCCESS,
-      result: util.getResultArrayfromBlockChainResult(getUnmatchedResp)
-    });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_UNMATCHED_NOTICES, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-else 
-return ({
-statusCode: constants.SUCCESS,
-      result: "Invalid Org name"
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
     });
 
 }
-
-
 
 /**
- * This method will get expired policy
+ * This method will download Unmatched Ip Letters
  * @param {*} req 
  * @param {*} res 
  */
 
 async function downloadUnmatchedNotices(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_UNMATCHED_NOTICES);
-  if(req.auth.orgName=constants.IRM){
-  try {
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var fabricToken = req.auth.fabricToken;
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getListUnmatchedNotices;
-    var schemaName = "IpLetter";
-    var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(fabricToken, "", schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    console.log('getUnmatchedResp----> ', getUnmatchedResp);
-    var xls = json2xls(util.getResultArrayfromBlockChainResult(getUnmatchedResp));
-    var fileName = uuidV1();
-    var filePath = configData.CANADIAN_INSURANCE_FILE_LOCATION + fileName + ".xlsx";
-    console.log("filePath===========>", filePath);
-    fs.writeFileSync(filePath, xls, 'binary');
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.DOWNLOAD_UNMATCHED_NOTICES);
+  if (req.auth.orgName = constants.IRM || testMode ) {
+    try {
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getListUnmatchedNotices;
+      var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, "", ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      if(getUnmatchedResp.length>0)
+      {
+      var xls = json2xls(util.getResultArrayfromBlockChainResult(getUnmatchedResp));
+      var fileName = uuidV1();
+      var filePath = configData.CANADIAN_INSURANCE_FILE_LOCATION + fileName + ".xlsx";
+      logger.info("filePath===========>", filePath);
+      fs.writeFileSync(filePath, xls, 'binary');
+      return ({
+        statusCode: constants.SUCCESS,
+        result: filePath,
+      });
+    }else
     return ({
-      statusCode: constants.SUCCESS,
-      result: filePath,
+      statusCode: constants.NO_CONTENT,
+      result: constants.MESSAGE_204
     });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.DOWNLOAD_UNMATCHED_NOTICES, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
+    return ({
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
+    });
+}
+
+/**
+ * This method will search Ip letters by IRM.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function searchIPNotices(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES);
+  if (req.auth.orgName == constants.IRM || testMode) {
+    try {
+      var peerName = util.getPeerName(req.auth.orgName);
+      var attributeName = req.swagger.params['attributeName'].value;
+      var attributeValue = req.swagger.params['attributeValue'].value;
+      logger.info("attributeName==attributeValue==", attributeName, "=attributeValue=", attributeValue);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.searchIPNotices;
+      var getIpNoticeResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, attributeName, attributeValue, ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      if (getIpNoticeResp.length>0)
+        return ({
+          statusCode: constants.SUCCESS,
+          result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
+        });
+      else
+        return ({
+          statusCode: constants.NO_CONTENT,
+          result: constants.MESSAGE_204
+        });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IP_NOTICES, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
+    return ({
+      statusCode: constants.INVALID_INPUT,
+          message: constants.INVALID_ORG
+    });
+}
+
+/**
+ * This method will search Ip notices by Insurer.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function searchIPNoticesByInsurer(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IPNOTICES_BY_INSURER);
+  try {
+    var peerName = util.getPeerName(req.auth.orgName);
+    var attributeName = req.swagger.params['attributeName'].value;
+    var attributeValue = req.swagger.params['attributeValue'].value;
+    var insurerName = req.swagger.params['insurerName'].value;
+    logger.info("attributeName==attributeValue==", attributeName, "=attributeValue=", attributeValue);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.searchIPNoticeByInsurer;
+    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, attributeName, attributeValue, ipLetterSchemaName, insurerName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if (getIpNoticeResp.length>0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
+      });
+    else
+      return ({
+        statusCode: constants.NO_CONTENT,
+        result: constants.MESSAGE_204
+      });
   } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_UNMATCHED_NOTICES, error);
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IPNOTICES_BY_INSURER, error);
     return ({
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500
     })
   }
 }
-else 
-return ({
-  statusCode: constants.SUCCESS,
-  result: "Invalid Org Name",
-});
+
+/**
+ * This method will get ip letter count by notice date used by auditor.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getAuditorIpCountByNoticeDate(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_IP_COUNT_BY_NOTICEDATE);
+  if (req.auth.orgName = constants.AUDITOR || testMode) {
+    try {
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterByNoticeDateRangeAndSchemaName;
+      var fromNoticeDate1 = moment().subtract(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
+      var fromNoticeDate = fromNoticeDate1 + " 00:00:00";
+      var toNoticeDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
+      var toNoticeDate = toNoticeDate1 + " 00:00:00";
+      var getIpNoticeResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, fromNoticeDate.toString(), toNoticeDate.toString(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var myObject = {};
+      for (var i = 0; i < getIpNoticeResp.length; i++) {
+        var key = getIpNoticeResp[i].Record.bankId;
+        logger.info(getIpNoticeResp[i].Record.bankId);
+        if (myObject.hasOwnProperty(key)) {
+          myObject[key] += 1;
+        } else {
+          myObject[key] = 1;
+        }
+      }
+      if (myObject) {
+        return ({
+          statusCode: constants.SUCCESS,
+          result: util.convertData(getIpNoticeResp, constants.BANK_ID)
+        });
+      }
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_IP_COUNT_BY_NOTICEDATE, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
+    return ({
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
+    });
 }
+
+/**
+ * This method will get Ip letter details by Bank 
+ * and notice date use by auditor.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getIpNoticeByBankAndNoticeDate(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPNOTICE_BY_BANK_AND_NOTICEDATE);
+  if (req.auth.orgName == constants.AUDITOR || testMode) {
+    try {
+      var fromExpiredDate1 = moment().subtract(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
+      var fromExpiredDate = fromExpiredDate1 + " 00:00:00";
+      var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
+      var toExpiredDate = toExpiredDate1 + " 00:00:00"
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndNoticeDate;
+      var bankId = req.swagger.params['bankId'].value;   //req.auth.orgName;
+      var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), bankId.trim(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      if (getIpNoticeResp.length>0)
+        return ({
+          statusCode: constants.SUCCESS,
+          result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
+        });
+      else
+        return ({
+          statusCode: constants.NO_CONTENT,
+          result: constants.MESSAGE_204
+        });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPNOTICE_BY_BANK_AND_NOTICEDATE, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
+    return ({
+      statusCode: constants.INVALID_INPUT,
+          message: constants.INVALID_ORG
+    });
+}
+
+/**
+ * This method will get Ip letter expiring use by auditor.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getAuditorPoliciesExpiringCount(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_POLICIES_EXPIRING_COUNT);
+  if (req.auth.orgName == constants.AUDITOR || testMode) {
+    try {
+      var daysValue = req.swagger.params['days'].value;
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpnoticebyExpirngDateRangeAndSchemaName;
+      var n = parseInt(daysValue); //number of days to add. 
+      var dateFrom1 = moment().format('YYYY-MM-DD');
+      var dateFrom = dateFrom1 + " 23:59:59";
+      var dateTo1 = moment().add(n, 'days').format('YYYY-MM-DD');
+      var dateTo = dateTo1 + " 23:59:59";
+      logger.info(' time stamp dateFrom-----> ', dateFrom);
+      logger.info('time stamp dateTo-----> ', dateTo);
+      var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, dateFrom.toString(), dateTo.toString(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var myObject = {};
+      for (var i = 0; i < getIpLetterExpiredPoliciesByDateResp.length; i++) {
+        var key = getIpLetterExpiredPoliciesByDateResp[i].Record.bankId
+        logger.info(getIpLetterExpiredPoliciesByDateResp[i].Record.bankId);
+        if (myObject.hasOwnProperty(key)) {
+          myObject[key] += 1;
+        } else {
+          myObject[key] = 1;
+        }
+      }
+      return ({
+        statusCode: constants.SUCCESS,
+        result: util.convertData(getIpLetterExpiredPoliciesByDateResp, constants.BANK_ID)
+      });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_POLICIES_EXPIRING_COUNT, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else {
+    return ({
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
+    });
+  }
+}
+
+/**
+ * This method will get expring policy by bank use by auditor.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getAuditorExpiringPoliciesByBank(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_EXPIRING_POLICIES_BY_BANK);
+  if (req.auth.orgName == constants.AUDITOR || testMode) {
+    try {
+      var bankName = req.swagger.params['bank'].value;
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndExpireDate;
+      var schemaName = "IpLetter";
+      var n = constants.NO_OF_DAYS;
+      var dateFrom1 = moment().format('YYYY-MM-DD');
+      var dateFrom = dateFrom1 + " 23:59:59";
+      var dateTo1 = moment().add(n, 'days').format('YYYY-MM-DD');
+      var dateTo = dateTo1 + " 23:59:59";
+      var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateFrom.toString(), dateTo.toString(), bankName, ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      if(getIpLetterExpiredPoliciesByDateResp.length>0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: getIpLetterExpiredPoliciesByDateResp
+      });
+      else
+      return ({
+        statusCode: constants.NO_CONTENT,
+        result: constants.MESSAGE_204
+      });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_EXPIRING_POLICIES_BY_BANK, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
+    return ({
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
+    });
+}
+
+
+/**
+ * This method will get ip notice count by notice date use by auditor.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getExpiredIpNoticeCountByDate(req, res) {
+
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPNOTICE_COUNT_BY_DATE);
+  if (req.auth.orgName == constants.AUDITOR || testMode) {
+    try {
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpPoliciesExpiringByDateRange;
+      var noOfDays = req.swagger.params['days'].value;
+      var fromExpiredDate1 = moment().subtract(noOfDays, 'days').format('YYYY-MM-DD');
+      var fromExpiredDate = fromExpiredDate1+" 23:59:59";
+      var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
+      var toExpiredDate = toExpiredDate1+" 23:59:59";
+      logger.info("fromExpiredDate=========>", fromExpiredDate);
+      logger.info("toExpiredDate=========>", toExpiredDate);
+      var getExpiredPolicyResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+     console.log('getExpiredPolicyResp-->', getExpiredPolicyResp);
+      var myObject = {};
+      for (var i = 0; i < getExpiredPolicyResp.length; i++) {
+        var key = getExpiredPolicyResp[i].Record.bankId;
+        if (myObject.hasOwnProperty(key)) {
+          myObject[key] += 1;
+        } else {
+          myObject[key] = 1;
+        }
+      }
+      if (myObject) {
+        return ({
+          statusCode: constants.SUCCESS,
+          result: "Success",
+          result: util.convertData(getExpiredPolicyResp, constants.BANK_ID)
+        });
+      } else {
+        return ({
+          statusCode: constants.NO_CONTENT,
+          result: constants.MESSAGE_204
+        });
+
+      }
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPNOTICE_COUNT_BY_DATE, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
+    return ({
+      statusCode: constants.INVALID_INPUT,
+      message: constants.INVALID_ORG
+    });
+}
+
+/**
+ * This method will get  expired ip notice  by bank and expired date use by audiotr
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function getExpiredIpNoticeByBankAndDate(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY);
+  if (req.auth.orgName == constants.AUDITOR || testMode) {
+    try {
+    //  var fromExpiredDate1 = moment().subtract(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
+      var fromExpiredDate1 = moment().subtract(7, 'days').format('YYYY-MM-DD');
+      var fromExpiredDate = fromExpiredDate1 + " 23:59:59";
+      var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
+      var toExpiredDate = toExpiredDate1 + " 23:59:59";
+      console.log('fromExpiredDate : toExpiredDate: ', fromExpiredDate , toExpiredDate);
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndExpireDate;
+      var bankId = req.swagger.params['bankId'].value;//req.auth.orgName;
+      console.log('bankId--->', bankId);
+      var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString(), toExpiredDate.toString(), bankId.trim(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      console.log('getIpNoticeResp--->', getIpNoticeResp);
+      if (getIpNoticeResp.length > 0)
+        return ({
+          statusCode: constants.SUCCESS,
+          result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
+        });
+      else
+        return ({
+          statusCode: constants.NO_CONTENT,
+          result: constants.MESSAGE_204
+        });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  } else
+    return ({
+      statusCode: constants.INVALID_INPUT,
+          message: constants.INVALID_ORG
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * This method will get expired policy
@@ -1511,116 +1603,5 @@ async function ipNoticesSummary(req, res) {
   }
 }
 
-/**
- * This method will get expired policy
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getAuditorPoliciesExpiringCount(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_POLICIES_EXPIRING);
-  if(req.auth.orgName==constants.AUDITOR){
-  try {
-
-    var daysValue = req.swagger.params['days'].value;
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var fabricToken = req.auth.fabricToken;
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpnoticebyExpirngDateRangeAndSchemaName;
-    logger.info('chaincodeFunctionName:::', chaincodeFunctionName);
-    var n = parseInt(daysValue); //number of days to add. 
-    var dateFrom1 = moment().format('YYYY-MM-DD');
-    var dateFrom = dateFrom1 + " 23:59:59";
-    var dateTo1 = moment().add(n, 'days').format('YYYY-MM-DD');
-    var dateTo = dateTo1 + " 23:59:59";
-    logger.info(' time stamp dateFrom-----> ', dateFrom);
-    logger.info('time stamp dateTo-----> ', dateTo);
-    var schemaName = "IpLetter";
-    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeThreeArgs(fabricToken, dateFrom.toString(), dateTo.toString(), schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    logger.info('getIpLetterExpiredPoliciesByDateResp--->', getIpLetterExpiredPoliciesByDateResp);
-    var myObject = {};
-    for (var i = 0; i < getIpLetterExpiredPoliciesByDateResp.length; i++) {
-      var key = getIpLetterExpiredPoliciesByDateResp[i].Record.bankId
-      logger.info(getIpLetterExpiredPoliciesByDateResp[i].Record.bankId);
-      if (myObject.hasOwnProperty(key)) {
-        myObject[key] += 1;
-      } else {
-        myObject[key] = 1;
-      }
-    }
-    console.log('myObject---->', myObject);
-    return ({
-      statusCode: constants.SUCCESS,
-      result: myObject
-    });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_POLICIES_EXPIRING, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}else{
-  return ({
-    statusCode: constants.SUCCESS,
-    result: "Invalid Org Name"
-  });
-}
-}
 
 
-/**
- * This method will get expired policy
- * @param {*} req 
- * @param {*} res 
- */
-
-async function getAuditorExpiringPoliciesByBank(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_POLICIES_EXPIRING);
-  if(req.auth.orgName==constants.AUDITOR){
-  try {
-    var bankName = req.swagger.params['bank'].value;
-    var chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
-    var peerName = util.getPeerName(req.auth.orgName);
-    var fabricToken = req.auth.fabricToken;
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndExpireDate;
-    logger.info('chaincodeFunctionName:::', chaincodeFunctionName);
-    var schemaName = "IpLetter";
-    var n = 7;
-    var dateFrom1 = moment().format('YYYY-MM-DD');
-    var dateFrom = dateFrom1 + " 23:59:59";
-    var dateTo1 = moment().add(n, 'days').format('YYYY-MM-DD');
-    var dateTo = dateTo1 + " 23:59:59";
-    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(fabricToken, dateFrom.toString(), dateTo.toString(), bankName, schemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-    console.log('getIpLetterExpiredPoliciesByDateResp--->', getIpLetterExpiredPoliciesByDateResp);
-    /*var  obj =  getIpLetterExpiredPoliciesByDateResp;
-    var myObject = { };
-    for(var i=0 ; i< getIpLetterExpiredPoliciesByDateResp.length ; i++){
-     var key =  getIpLetterExpiredPoliciesByDateResp[i].Record.bankId
-     console.log(getIpLetterExpiredPoliciesByDateResp[i].Record.bankId);
-    console.log('---',myObject.hasOwnProperty(key));
-       if(myObject.hasOwnProperty(key)){
-          myObject[key] += 1;
-       } else{
-          myObject[key] = 1;
-       }
-    }
-     console.log('myObject---->', myObject);*/
-    return ({
-      statusCode: constants.SUCCESS,
-      result: getIpLetterExpiredPoliciesByDateResp
-    });
-  } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_POLICIES_EXPIRING, error);
-    return ({
-      code: constants.INTERNAL_SERVER_ERROR,
-      message: constants.MESSAGE_500
-    })
-  }
-}
-else
-return ({
-      statusCode: constants.SUCCESS,
-      result: "Invalid Org Name"
-    });
-}

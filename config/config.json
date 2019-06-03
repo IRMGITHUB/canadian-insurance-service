@@ -1,6 +1,6 @@
-{
+{   "TEST_MODE" :true,
 	"CONDITION_REPORT_STORAGE_TYPE": "cloud",
-	"CANADIAN_INSURANCE_FILE_LOCATION": "/home/ubuntu/uploadCanadianInsuranceData/",
+	"CANADIAN_INSURANCE_FILE_LOCATION": "C:/uploadartworkdata/",
 	"ENROLL_USER_SERVICE_URL_HOST_FIRST": "http://18.222.37.52:3001/users",
 	"ENROLL_USER_SERVICE_URL_HOST_SECOND": "http://18.222.37.52:3001/users",
 	"CHAINCODE_API_SERVICE_URL_HOST_FIRST": "http://18.222.37.52:3001/channels/",

@@ -251,7 +251,7 @@ paths:
       description: "This service used to send 200 for option method call"
       operationId: "processIpLettersOptions"
       produces:
-      - "application/json"
+        - "application/json"
       parameters:
         - name: "token"
           in: "header"
@@ -259,7 +259,7 @@ paths:
           type: "string"
         - name: "requestId"
           in: "path"
-          description: "Comma separated Mortgage Numbers"
+          description: "Comma separated requestId"
           required: true
           type: "string"
       responses:
@@ -281,7 +281,7 @@ paths:
       security:
         - Bearer: []
       produces:
-      - "application/json"
+        - "application/json"
       parameters:
         - name: "token"
           in: "header"
@@ -289,7 +289,7 @@ paths:
           type: "string"
         - name: "requestId"
           in: "path"
-          description: "Comma separated Mortgage Numbers"
+          description: "Comma separated requestId"
           required: true
           type: "string"
       responses:
@@ -1694,59 +1694,7 @@ paths:
 
   
 
-  /findAllTransactionByType/{transactionType}:
-    options:
-      tags:
-      - "Transaction"
-      summary: "Get success for options"
-      description: "This service used to send 200 for option method call"
-      operationId: "findAllTransactionByTypeOptions"
-      produces:
-      - "application/json"
-      parameters:
-      - name: "transactionType"
-        in: "path"
-        description: "TransactionType either addLoan or addIPLetter"
-        required: true
-        type: "string" 
-      responses:
-        200:
-          description: "successful operation"
-        400:
-          description: "bad request"
-        404:
-          description: "not found"
-      x-swagger-router-controller: "artWorkController"
-    get:
-      tags:
-      - "Transaction"
-      summary: "Get  information by transactionType"
-      description: "This service is used to get  information by transactionType"
-      operationId: "findAllTransactionByType"
-      security:
-        - Bearer: []
-      produces:
-      - "application/json"
-      parameters:
-      - name: "token"
-        in: "header"
-        required: false
-        type: "string"
-      - name: "transactionType"
-        in: "path"
-        description: "TransactionType either addArtWork,updateArtWork or addConditionReport"
-        required: true
-        type: "string" 
-      responses:
-        200:
-          description: "successful operation"
-        400:
-          description: "Invalid ID supplied"
-        404:
-          description: "Data not found"
-        405:
-          description: "Validation exception"
-      x-swagger-router-controller: "artWorkController"
+  
 
   /getTransactionByReferenceNum/{referenceNumber}:
     options:
@@ -1770,12 +1718,12 @@ paths:
           description: "bad request"
         404:
           description: "not found"
-      x-swagger-router-controller: "artWorkController"
+      x-swagger-router-controller: "transactionController"
     get:
       tags:
       - "Transaction"
-      summary: "Get  information by transactionType"
-      description: "This service is used to get  information by transactionType"
+      summary: "Get  information by reference number"
+      description: "This service is used to get  transaction information by reference number"
       operationId: "getTransactionByReferenceNum"
       security:
         - Bearer: []
@@ -1788,7 +1736,7 @@ paths:
         type: "string"
       - name: "referenceNumber"
         in: "path"
-        description: "Reference Number either artwork number or conditionreportnumber"
+        description: "Reference Number either bank Loan number or IP letter number"
         required: true
         type: "string" 
       responses:
@@ -1800,7 +1748,71 @@ paths:
           description: "Data not found"
         405:
           description: "Validation exception"
-      x-swagger-router-controller: "artWorkController"
+      x-swagger-router-controller: "transactionController"
+
+  /transaction/getDetailsByTransactionId/{transactionId}:
+    options:
+      tags:
+      - "Transaction"
+      summary: "Get  information by transactionId"
+      description: "This service is used to get  information by transactionId"
+      operationId: "getDetailsByTransactionIdOptions"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "transactionId"
+        in: "path"
+        description: ""
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/transactiondata"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Audit not found"
+      x-swagger-router-controller: "transactionController" 
+    get:
+      tags:
+      - "Transaction"
+      summary: "Get  information by transactionId"
+      description: "This service is used to get  information by transactionId"
+      operationId: "getDetailsByTransactionId"
+      security:
+        - Bearer: []
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "transactionId"
+        in: "path"
+        description: ""
+        required: true
+        type: "string" 
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/transactiondata"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Audit not found"
+      x-swagger-router-controller: "transactionController" 
+
+  
 
   /findCurrentNumber:
     options:
@@ -1921,7 +1933,7 @@ securityDefinitions:
     in: "header"  
 
 definitions:
-  IP Letter:
+  IPLetter:
     type: "object"
     properties:
       policyNumber :

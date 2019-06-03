@@ -11,7 +11,7 @@ var db = require('../api/helpers/CouchDBCommon.js');
 var util = require('../utils/util.js'); 
 module.exports = {
   addTransaction: addTransaction,
-  getTransactionsByLcn:getTransactionsByLcn,
+  getTransactionsByReferenceNumber:getTransactionsByReferenceNumber,
   getCurrentBlock:getCurrentBlock,
   getDetailsByTransactionId:getDetailsByTransactionId,
   getTransactionsByTransactionType:getTransactionsByTransactionType,
@@ -75,11 +75,11 @@ async function addTransaction(reqBody) {
  * @param {*} loanControlNumber
  * @returns
  */
-async function getTransactionsByLcn(loanControlNumber)   {
+async function getTransactionsByReferenceNumber(referenceNumber)   {
   logHelper.logMethodEntry(logger, constants.TRANSACTION_SERVICE_FILE, constants.GET_TRANSACTION_BY_LCN);
   logHelper.logDebug(logger, constants.TRANSACTION_SERVICE_FILE, constants.GET_TRANSACTION_BY_LCN, constants.REQUEST );
   try{
-    var result = await db.find({"loanControlNumber": loanControlNumber.toString(),"transactionId": {"$gte": null}}); 
+    var result = await db.find({"loanControlNumber": referenceNumber.toString(),"transactionId": {"$gte": null}}); 
     var resp = [];
       if (result.length > 0) {
         for(var i = 0; i < result.length; i++) {
