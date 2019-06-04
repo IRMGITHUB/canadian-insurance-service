@@ -627,7 +627,7 @@ paths:
       tags:
       - "Bank"
       summary: "Get success for options"
-      description: "This service is used to get Policy expire"
+      description: "This service is used to get expired Ip letter by bank and date."
       operationId: "getExpiredIPLetterByBankNDateOptions"
       consumes:
       - "application/json"
@@ -656,8 +656,8 @@ paths:
     get:
       tags:
       - "Bank"
-      summary: "get Policy expires"
-      description: "This service used to  get Policy expires"
+      summary: "get expired Ip letter by bank and date"
+      description: "This service used to  get expired Ip letter by bank and date"
       operationId: "getExpiredIPLetterByBankNDate"
       security:
         - Bearer: []
@@ -812,12 +812,12 @@ paths:
         type: "string"
       - name: "attributeName"
         in: "path"
-        description: "count to list IP notices"
+        description: "attributeName"
         required: true
         type: "string"
       - name: "attributeValue"
         in: "path"
-        description: "count to list IP notices"
+        description: "attributeValue"
         required: true
         type: "string"
       responses:
@@ -1428,7 +1428,7 @@ paths:
       tags:
       - "Auditor"
       summary: "Get success for options"
-      description: "This service is used to get Policy expire"
+      description: "This service is used to get expired IP letter count by auditor"
       operationId: "getAuditorPoliciesExpiringCountOptions"
       consumes:
       - "application/json"
@@ -1457,8 +1457,8 @@ paths:
     get:
       tags:
       - "Auditor"
-      summary: "get Policy expires"
-      description: "This service used to  get Policy expires"
+      summary: " get expired IP letter count "
+      description: "This service used to   get expired IP letter count "
       operationId: "getAuditorPoliciesExpiringCount"
       security:
         - Bearer: []
@@ -1494,7 +1494,7 @@ paths:
       tags:
       - "Auditor"
       summary: "Get success for options"
-      description: "This service is used to get Policy expire"
+      description: "This service is used to get expiring policy by bank"
       operationId: "getAuditorExpiringPoliciesByBankOptions"
       consumes:
       - "application/json"
@@ -1523,8 +1523,8 @@ paths:
     get:
       tags:
       - "Auditor"
-      summary: "get Policy expires"
-      description: "This service used to  get Policy expires"
+      summary: " get expiring policy by bank"
+      description: "This service used to   get expiring policy by bank"
       operationId: "getAuditorExpiringPoliciesByBank"
       security:
         - Bearer: []
@@ -1561,7 +1561,7 @@ paths:
       tags:
       - "Auditor"
       summary: "Get success for options"
-      description: "This service is used to get All IP notices recevied"
+      description: "This service is used to get expired IP notice count"
       operationId: "getExpiredIpNoticeCountByDateOptions"
       consumes:
       - "application/json"
@@ -1590,8 +1590,8 @@ paths:
     get:
       tags:
       - "Auditor"
-      summary: "Get all IP notices received from service provider"
-      description: "This service used to  get all IP notices received"
+      summary: "Get expired ip notice count"
+      description: "This service used to  get expired ip notice count"
       operationId: "getExpiredIpNoticeCountByDate"
       security:
         - Bearer: []
@@ -1625,7 +1625,7 @@ paths:
       tags:
       - "Auditor"
       summary: "Get success for options"
-      description: "This service is used to get All IP notices recevied"
+      description: "This service is used to get expired IP notice by bank and date"
       operationId: "getExpiredIpNoticeByBankAndDateOptions"
       consumes:
       - "application/json"
@@ -1654,8 +1654,8 @@ paths:
     get:
       tags:
       - "Auditor"
-      summary: "Get all IP notices received from service provider"
-      description: "This service used to  get all IP notices received"
+      summary: "Get expired IP notice by bank and date"
+      description: "This service used to get expired IP notice by bank and date"
       operationId: "getExpiredIpNoticeByBankAndDate"
       security:
         - Bearer: []
@@ -1700,7 +1700,7 @@ paths:
       parameters:
       - name: "referenceNumber"
         in: "path"
-        description: "Reference Number either artwork number or conditionreportnumber"
+        description: "Reference Number either IpLeter request Id  or bank loan unique Id"
         required: true
         type: "string"
       responses:
