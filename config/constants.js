@@ -187,6 +187,7 @@ module.exports = {
 	"SEARCH_IPNOTICES_BY_INSURER" : "searchIPNoticesByInsurer",
 	"SEARCH_IPNOTICES_BY_BANK" : "searchIPNoticesByBank",
 	"SEARCH_IP_NOTICES_BY_INSURER" : "searchIPNoticesByInsurer",
+	"LIST_IPNOTICES_BY_INSURER" : "listIPNoticesByInsurer",
 	"UPDATE_UNMATCH_IPNOTICES" : "updateUnmatchIPNotices",
 	"GET_UPDATE_ZIP_FILE_PATH" : "getUpdateZipFilePath",
 	"UPDATE_READ_ZIP_FILE" : "updateReadZipFile",

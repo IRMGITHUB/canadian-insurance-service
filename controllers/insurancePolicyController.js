@@ -25,6 +25,7 @@ module.exports = {
     downloadUnmatchedNotices : downloadUnmatchedNotices,
     searchIPNotices : searchIPNotices,
     searchIPNoticesByInsurer : searchIPNoticesByInsurer,
+    listIPNoticesByInsurer : listIPNoticesByInsurer,
     getAuditorIpCountByNoticeDate: getAuditorIpCountByNoticeDate,
     getIpNoticeByBankAndNoticeDate : getIpNoticeByBankAndNoticeDate,
     getAuditorPoliciesExpiringCount : getAuditorPoliciesExpiringCount,
@@ -40,7 +41,8 @@ module.exports = {
     getIPNoticeRecvdSummaryOption : ipNoticesRecvdSummaryOptions,
     listBankIPLettersByBankNlimitOptions : ipNoticesRecvdSummaryOptions,
     searchIPNoticesOptions : ipNoticesRecvdSummaryOptions,
-    ssearchIPNoticesByBankOptions : ipNoticesRecvdSummaryOptions,
+    searchIPNoticesByBankOptions : ipNoticesRecvdSummaryOptions,
+    listIPNoticesByInsurerOptions : ipNoticesRecvdSummaryOptions,
     uploadIpLettersOptions : ipNoticesRecvdSummaryOptions,
     listUnmatchedNoticesOptions : ipNoticesRecvdSummaryOptions,
     ipNoticesSummaryOptions : ipNoticesRecvdSummaryOptions,
@@ -327,6 +329,25 @@ function searchIPNoticesByInsurer(req, res) {
       utils.writeJson(res, response,constants.ERROR_CODE);
     });
   };
+
+  /**
+ *
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+function listIPNoticesByInsurer(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.SEARCH_IP_NOTICES_BY_INSURER);
+  insurancePolicyService.listIPNoticesByInsurer(req,res).then(function (response) {
+      logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.SEARCH_IP_NOTICES_BY_INSURER, constants.RESPONSE, response);
+      logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.SEARCH_IP_NOTICES_BY_INSURER);
+      utils.writeJson(res, response,constants.SUCCESS);
+    }).catch(function (response) {
+      utils.writeJson(res, response,constants.ERROR_CODE);
+    });
+  };
+
+
 
    /**
  *

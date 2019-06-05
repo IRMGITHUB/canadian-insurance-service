@@ -19,10 +19,10 @@ module.exports = {
     queryChainCode: queryChainCode,
     queryBlockByTransactionId: queryBlockByTransactionId,
     listChannelInfo: listChannelInfo,
-    queryChainCodeTwoArgs : queryChainCodeTwoArgs,
-    queryChainCodeThreeArgs : queryChainCodeThreeArgs,
-    queryChainCodeFourArgs : queryChainCodeFourArgs,
-    queryChainCodeFiveArgs : queryChainCodeFiveArgs
+    queryChainCodeTwoArgs: queryChainCodeTwoArgs,
+    queryChainCodeThreeArgs: queryChainCodeThreeArgs,
+    queryChainCodeFourArgs: queryChainCodeFourArgs,
+    queryChainCodeFiveArgs: queryChainCodeFiveArgs
 }
 
 /**
@@ -185,10 +185,10 @@ async function listChannelInfo(fabricToken, channelName, peer, persona, orgName)
     logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.LIST_CHANNEL_INFO);
     try {
         //var hostname = await util.getUrl(persona);
-        var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST ;
+        var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
         var url = hostname + channelName + "?peer=" + peer;
         var options = {
-            method:  constants.REQUEST_GET,
+            method: constants.REQUEST_GET,
             uri: url,
             headers: {
                 "Content-Type": constants["CONTENT-TYPE"],
@@ -199,167 +199,221 @@ async function listChannelInfo(fabricToken, channelName, peer, persona, orgName)
         try {
             var response = await request2(options);
             logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.LIST_CHANNEL_INFO, constants.RESPONSE, response);
-                return Promise.resolve(response);
-           }
-           catch (error) {
+            return Promise.resolve(response);
+        } catch (error) {
             logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.LIST_CHANNEL_INFO, error);
-               Promise.reject(error);
-           }
-    }catch (error) {
+            Promise.reject(error);
+        }
+    } catch (error) {
         logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.LIST_CHANNEL_INFO, error);
         return error;
     }
     logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.LIST_CHANNEL_INFO);
 }
 
-async function queryChainCodeTwoArgs(fabricToken, Id, schemaName , chainCodeName, functionname, custodianPeer, persona, orgName) {
-    logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-    console.log('queryChainCode two args...............', Id, schemaName)
-    var url;
-    var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
-    try {
-    if (Id != "") {
-    var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + Id + "%22%2C%22" +schemaName+"%22%5D"; 
-    console.log("url with id two args ================>", url);
-    } else {
-    var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" +schemaName+"%22%5D"; 
-    logger.info("url without id ================>", url);
-    }
-    logger.info("url================>", url);
-    var options = {
-    method: constants.REQUEST_GET,
-    uri: url,
-    headers: {
-    "Content-Type": constants["CONTENT-TYPE"],
-    "authorization": "Bearer " + fabricToken
-    },
-    json: true
-    };
-    try {
-    var response = await request2(options);
-    logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
-    logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-    return Promise.resolve(response);
-    } catch (error) {
-    logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
-    Promise.reject(error);
-    }
-    } catch (error) {
-    logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
-    return error;
-    }
-    } 
-
-    async function queryChainCodeThreeArgs(fabricToken, attributeName,attributeVal,schemaName , chainCodeName, functionname, custodianPeer, persona, orgName) {
-        logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-        console.log('queryChainCode three args...............', attributeName,attributeVal, schemaName)
-        var url;
-        var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
-        try {
-        if ( attributeName!= "") {
-        var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + attributeName+ "%22%2C%22" +attributeVal+ "%22%2C%22" +schemaName+"%22%5D"; 
-        console.log("url with id three  args ================>", url);
-        } else {
-        var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" +schemaName+"%22%5D"; 
-        logger.info("url without id ================>", url);
+/**
+ *
+ *
+ * @param {*} fabricToken
+ * @param {*} Id
+ * @param {*} schemaName
+ * @param {*} chainCodeName
+ * @param {*} functionname
+ * @param {*} custodianPeer
+ * @param {*} persona
+ * @param {*} orgName
+ * @returns
+ */
+async function queryChainCodeTwoArgs(fabricToken, Id, schemaName, chainCodeName, functionname, custodianPeer, persona, orgName) {
+    logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+    console.log('queryChainCode two args...............', Id, schemaName)
+    var url;
+    var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
+    try {
+        if (Id != "") {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + Id + "%22%2C%22" + schemaName + "%22%5D";
+            console.log("url with id two args ================>", url);
+        } else {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + schemaName + "%22%5D";
+            logger.info("url without id ================>", url);
         }
-        logger.info("url================>", url);
-        var options = {
-        method: constants.REQUEST_GET,
-        uri: url,
-        headers: {
-        "Content-Type": constants["CONTENT-TYPE"],
-        "authorization": "Bearer " + fabricToken
-        },
-        json: true
-        };
-        try {
-        var response = await request2(options);
-        logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
-        logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-        return Promise.resolve(response);
-        } catch (error) {
-        logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
-        Promise.reject(error);
-        }
-        } catch (error) {
-        logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
-        return error;
-        }
-        } 
-
-        async function queryChainCodeFourArgs(fabricToken,attributeName,attributeVal,schemaName ,userType,chainCodeName, functionname, custodianPeer, persona, orgName) {
-            logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-            console.log('queryChainCode  args...............',attributeName,attributeVal, schemaName,userType)
-            var url;
-            var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
-            try {
-            if (attributeName!= "") {
-            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + attributeName+ "%22%2C%22" +attributeVal+ "%22%2C%22" +schemaName+ "%22%2C%22" +userType+"%22%5D"; 
-            console.log("url with id four args ================>", url);
-            } else {
-            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" +schemaName+"%22%5D"; 
-            logger.info("url without id ================>", url);
-            }
-            logger.info("url================>", url);
-            var options = {
-            method: constants.REQUEST_GET,
-            uri: url,
-            headers: {
-            "Content-Type": constants["CONTENT-TYPE"],
-            "authorization": "Bearer " + fabricToken
+        logger.info("url================>", url);
+        var options = {
+            method: constants.REQUEST_GET,
+            uri: url,
+            headers: {
+                "Content-Type": constants["CONTENT-TYPE"],
+                "authorization": "Bearer " + fabricToken
             },
-            json: true
-            };
-            try {
-            var response = await request2(options);
-            logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
-            logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-            return Promise.resolve(response);
-            } catch (error) {
-            logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+            json: true
+        };
+        try {
+            var response = await request2(options);
+            logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
+            logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+            return Promise.resolve(response);
+        } catch (error) {
+            logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
             Promise.reject(error);
-            }
-            } catch (error) {
-            logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
-            return error;
-            }
-            } 
-
-            async function queryChainCodeFiveArgs(fabricToken,attributeName,attributeVal,schemaName,insurerName ,userType,chainCodeName, functionname, custodianPeer, persona, orgName) {
-                logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-                console.log('queryChainCode  args...............',attributeName,attributeVal, schemaName,userType)
-                var url;
-                var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
-                try {
-                if (attributeName!= "") {
-                var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + attributeName+ "%22%2C%22" +attributeVal+ "%22%2C%22" +schemaName+ "%22%2C%22" + insurerName+ "%22%2C%22"+userType+"%22%5D";
-                console.log("url with id two args ================>", url);
-                } else {
-                var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" +schemaName+"%22%5D"; 
-                logger.info("url without id ================>", url);
-                }
-                logger.info("url================>", url);
-                var options = {
-                method: constants.REQUEST_GET,
-                uri: url,
-                headers: {
-                "Content-Type": constants["CONTENT-TYPE"],
-                "authorization": "Bearer " + fabricToken
-                },
-                json: true
-                };
-                try {
-                var response = await request2(options);
-                logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
-                logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
-                return Promise.resolve(response);
-                } catch (error) {
-                logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
-                Promise.reject(error);
-                }
-                } catch (error) {
-                logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
-                return error;
-                }
-                } 
+        }
+    } catch (error) {
+        logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+        return error;
+    }
+}
+/**
+ *
+ *
+ * @param {*} fabricToken
+ * @param {*} attributeName
+ * @param {*} attributeVal
+ * @param {*} schemaName
+ * @param {*} chainCodeName
+ * @param {*} functionname
+ * @param {*} custodianPeer
+ * @param {*} persona
+ * @param {*} orgName
+ * @returns
+ */
+async function queryChainCodeThreeArgs(fabricToken, attributeName, attributeVal, schemaName, chainCodeName, functionname, custodianPeer, persona, orgName) {
+    logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+    console.log('queryChainCode three args...............', attributeName, attributeVal, schemaName)
+    var url;
+    var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
+    try {
+        if (attributeName != "") {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + attributeName + "%22%2C%22" + attributeVal + "%22%2C%22" + schemaName + "%22%5D";
+            console.log("url with id three  args ================>", url);
+        } else {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + schemaName + "%22%5D";
+            logger.info("url without id ================>", url);
+        }
+        logger.info("url================>", url);
+        var options = {
+            method: constants.REQUEST_GET,
+            uri: url,
+            headers: {
+                "Content-Type": constants["CONTENT-TYPE"],
+                "authorization": "Bearer " + fabricToken
+            },
+            json: true
+        };
+        try {
+            var response = await request2(options);
+            logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
+            logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+            return Promise.resolve(response);
+        } catch (error) {
+            logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+            Promise.reject(error);
+        }
+    } catch (error) {
+        logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+        return error;
+    }
+}
+/**
+ *
+ *
+ * @param {*} fabricToken
+ * @param {*} attributeName
+ * @param {*} attributeVal
+ * @param {*} schemaName
+ * @param {*} userType
+ * @param {*} chainCodeName
+ * @param {*} functionname
+ * @param {*} custodianPeer
+ * @param {*} persona
+ * @param {*} orgName
+ * @returns
+ */
+async function queryChainCodeFourArgs(fabricToken, attributeName, attributeVal, schemaName, userType, chainCodeName, functionname, custodianPeer, persona, orgName) {
+    logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+    console.log('queryChainCode  args...............', attributeName, attributeVal, schemaName, userType)
+    var url;
+    var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
+    try {
+        if (attributeName != "") {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + attributeName + "%22%2C%22" + attributeVal + "%22%2C%22" + schemaName + "%22%2C%22" + userType + "%22%5D";
+            console.log("url with id four args ================>", url);
+        } else {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + schemaName + "%22%5D";
+            logger.info("url without id ================>", url);
+        }
+        logger.info("url================>", url);
+        var options = {
+            method: constants.REQUEST_GET,
+            uri: url,
+            headers: {
+                "Content-Type": constants["CONTENT-TYPE"],
+                "authorization": "Bearer " + fabricToken
+            },
+            json: true
+        };
+        try {
+            var response = await request2(options);
+            logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
+            logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+            return Promise.resolve(response);
+        } catch (error) {
+            logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+            Promise.reject(error);
+        }
+    } catch (error) {
+        logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+        return error;
+    }
+}
+/**
+ *
+ *
+ * @param {*} fabricToken
+ * @param {*} attributeName
+ * @param {*} attributeVal
+ * @param {*} schemaName
+ * @param {*} insurerName
+ * @param {*} userType
+ * @param {*} chainCodeName
+ * @param {*} functionname
+ * @param {*} custodianPeer
+ * @param {*} persona
+ * @param {*} orgName
+ * @returns
+ */
+async function queryChainCodeFiveArgs(fabricToken, attributeName, attributeVal, schemaName, insurerName, userType, chainCodeName, functionname, custodianPeer, persona, orgName) {
+    logHelper.logMethodEntry(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+    console.log('queryChainCode  args...............', attributeName, attributeVal, schemaName, userType)
+    var url;
+    var hostname = configData.CHAINCODE_API_SERVICE_URL_HOST_FIRST;
+    try {
+        if (attributeName != "") {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + attributeName + "%22%2C%22" + attributeVal + "%22%2C%22" + schemaName + "%22%2C%22" + insurerName + "%22%2C%22" + userType + "%22%5D";
+            console.log("url with id two args ================>", url);
+        } else {
+            var url = hostname + configData.channelName + "/chaincodes/" + chainCodeName + "?peer=" + custodianPeer + "&fcn=" + functionname + "&args=%5B%22" + schemaName + "%22%5D";
+            logger.info("url without id ================>", url);
+        }
+        logger.info("url================>", url);
+        var options = {
+            method: constants.REQUEST_GET,
+            uri: url,
+            headers: {
+                "Content-Type": constants["CONTENT-TYPE"],
+                "authorization": "Bearer " + fabricToken
+            },
+            json: true
+        };
+        try {
+            var response = await request2(options);
+            logHelper.logDebug(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, constants.RESPONSE, response);
+            logHelper.logMethodExit(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE);
+            return Promise.resolve(response);
+        } catch (error) {
+            logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+            Promise.reject(error);
+        }
+    } catch (error) {
+        logHelper.logError(logger, constants.CHAINCODE_SERVICE_FILE, constants.QUERY_CHAINCODE, error);
+        return error;
+    }
+}

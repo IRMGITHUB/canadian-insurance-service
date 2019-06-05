@@ -1168,13 +1168,15 @@ paths:
       x-swagger-router-controller: "insurancePolicyController" 
 
     
-  /listIPNoticesByInsurer:
+  /listIPNoticesByInsurer/{count}:
     options:
       tags:
       - "Insurance Provider"
       summary: "Get success for options"
       description: "This service is used to list IP notices"
       operationId: "listIPNoticesByInsurerOptions"
+      security:
+        - Bearer: []
       consumes:
       - "application/json"
       produces:
@@ -1184,6 +1186,11 @@ paths:
         in: "header"
         required: false
         type: "string"
+      - name: "count"
+        in: "path"
+        description: "count to list IP notices"
+        required: true
+        type: "string" 
       responses:
         200:
           description: "successful operation"
@@ -1211,6 +1218,11 @@ paths:
         in: "header"
         required: false
         type: "string"
+      - name: "count"
+        in: "path"
+        description: "count to list IP notices"
+        required: true
+        type: "string" 
       responses:
         200:
           description: "successful operation"

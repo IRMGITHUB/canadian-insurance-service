@@ -1,4 +1,4 @@
-{   "TEST_MODE" :false,
+{   "TEST_MODE" :true,
 	"CONDITION_REPORT_STORAGE_TYPE": "cloud",
 	"CANADIAN_INSURANCE_FILE_LOCATION": "/home/ubuntu/uploadCanadianInsuranceData/",
 	"ENROLL_USER_SERVICE_URL_HOST_FIRST": "http://18.222.37.52:3001/users",
@@ -27,6 +27,7 @@
 				"searchIPNotices": "searchIPNoticesByKeyValue",
 				"searchIPNoticesByBank": "searchIpNoticeByBank",
 				"searchIPNoticeByInsurer" : "searchIPNoticeByInsurer",
+				"listIPNoticesByInsurer" : "listIPNoticesByInsurerLimit",
 				"getIpExpiredPoliciesByDateAndBankId" : "getIpExpiredPoliciesByDateAndBankId",
 				"getIpnoticebyNoticeDateRange" : "getIpnoticebyNoticeDateRange",
 				"getExpiredIpNoticeCountByDate" : "getIpnoticebyExpirngDateRangeAndSchemaName",
