@@ -32,6 +32,7 @@ module.exports = {
     getAuditorExpiringPoliciesByBank : getAuditorExpiringPoliciesByBank,
     getExpiredIpNoticeCountByDate : getExpiredIpNoticeCountByDate,
     getExpiredIpNoticeByBankAndDate : getExpiredIpNoticeByBankAndDate,
+    auditorSearchIpLetterByBank : auditorSearchIpLetterByBank,
     addBankLoanInfoOptions:ipNoticesRecvdSummaryOptions,
     getExpiredPoliciesByDateOptions : ipNoticesRecvdSummaryOptions,
     getExpiringIpLetterCountOfNdaysByInsurerNDateOptions : ipNoticesRecvdSummaryOptions,
@@ -54,7 +55,8 @@ module.exports = {
     getAuditorPoliciesExpiringCountOptions : ipNoticesRecvdSummaryOptions,
     getAuditorExpiringPoliciesByBankOptions : ipNoticesRecvdSummaryOptions,
     updateUnmatchIPNoticesOptions: ipNoticesRecvdSummaryOptions,
-    getExpiringIpLetterDetailsByDateRangeOptions : ipNoticesRecvdSummaryOptions
+    getExpiringIpLetterDetailsByDateRangeOptions : ipNoticesRecvdSummaryOptions,
+    auditorSearchIpLetterByBankOptions : ipNoticesRecvdSummaryOptions
 }
 
 /**
@@ -445,6 +447,23 @@ function getExpiredIpNoticeByBankAndDate(req, res) {
   insurancePolicyService.getExpiredIpNoticeByBankAndDate(req,res).then(function (response) {
       logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_BY_BANKANDDATE, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_BY_BANKANDDATE);
+      utils.writeJson(res, response,constants.SUCCESS);
+    }).catch(function (response) {
+      utils.writeJson(res, response,constants.ERROR_CODE);
+    });
+  };
+
+  /**
+ *
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+function auditorSearchIpLetterByBank(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.AUDITOR_SEARCH_IPLETTER_BY_BANK);
+  insurancePolicyService.auditorSearchIpLetterByBank(req,res).then(function (response) {
+      logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.AUDITOR_SEARCH_IPLETTER_BY_BANK, constants.RESPONSE, response);
+      logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.AUDITOR_SEARCH_IPLETTER_BY_BANK);
       utils.writeJson(res, response,constants.SUCCESS);
     }).catch(function (response) {
       utils.writeJson(res, response,constants.ERROR_CODE);

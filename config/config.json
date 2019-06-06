@@ -9,7 +9,7 @@
 	"channelName": "canadianinsurancechannel",
 	"chaincodes": {
 		"canadianInsuranceInfo": {
-			"name": "insurance_cc5",
+			"name": "insurance_cc6",
 			"version": "v0",
 			"functions": {
 				"addLoanInfo": "addLoan",
@@ -28,7 +28,7 @@
 				"searchIPNoticesByBank": "searchIpNoticeByBank",
 				"searchIPNoticeByInsurer" : "searchIPNoticeByInsurer",
 				"listIPNoticesByInsurer" : "listIPNoticesByInsurerLimit",
-				"getIpExpiredPoliciesByDateAndBankId" : "getIpExpiredPoliciesByDateAndBankId",
+				"getIpExpiredPoliciesByDateAndBankId" : "getIpExpiredPoliciesDetailsByDateAndBankId",
 				"getIpnoticebyNoticeDateRange" : "getIpnoticebyNoticeDateRange",
 				"getExpiredIpNoticeCountByDate" : "getIpnoticebyExpirngDateRangeAndSchemaName",
 				"getIpNoticeByBankIdAndExpireDate" : "getIpNoticeByBankIdAndExpireDate",

@@ -1322,7 +1322,7 @@ paths:
             type: file
       x-swagger-router-controller: "insurancePolicyController" 
 
-  /getAuditorIpCountByNoticeDate:
+  /getAuditorIpCountByNoticeDate/{days}:
     options:
       tags:
       - "Auditor"
@@ -1333,6 +1333,16 @@ paths:
       - "application/json"
       produces:
       - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get IP Letter"
+        required: true
+        type: "string" 
       responses:
         200:
           description: "successful operation"
@@ -1360,6 +1370,11 @@ paths:
         in: "header"
         required: false
         type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get IP Letter"
+        required: true
+        type: "string" 
       responses:
         200:
           description: "successful operation"
@@ -1696,7 +1711,93 @@ paths:
           description: "Validation exception"
       x-swagger-router-controller: "insurancePolicyController" 
 
-  
+  /auditorSearchIpLetterByBank/{bankId}/{attributeName}/{attributeValue}:
+    options:
+      tags:
+      - "Auditor"
+      summary: "Get success for options"
+      description: "This service is used to search IP notices by auditor"
+      operationId: "auditorSearchIpLetterByBankOptions"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bankId"
+        in: "path"
+        description: "bank Name"
+        required: true
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attribute/field Name"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attribute/field Value"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Auditor"
+      summary: "search IP notices"
+      description: "This service used to  search IP notices"
+      operationId: "auditorSearchIpLetterByBank"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "bankId"
+        in: "path"
+        description: "bank Name"
+        required: true
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attributeName"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attributeValue"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
 
   
 
