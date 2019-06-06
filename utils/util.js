@@ -110,38 +110,30 @@ function convertData(data, keyName) {
         if (key) {
             if (keyArr.indexOf(key) === -1) {
                 keyArr.push(key);
-                // if (keyName === "policyExpiringDate") {
-                //     objArry.push({
-                //         date: key,
-                //         count: 1
-                //     });
-                // } else {
-                //     objArry.push({
-                //         insurer: key,
-                //         count: 1
-                //     });
-                // }
-                objArry.push({
-                    key,
-                    count: 1
-                })
+                if (keyName === "policyExpiringDate") {
+                    objArry.push({
+                        date: key,
+                        count: 1
+                    });
+                } else {
+                    objArry.push({
+                        insurer: key,
+                        count: 1
+                    });
+                }
             } else {
                 const keyIndex = keyArr.indexOf(key);
-                objArry[keyIndex] = {
-                    key: objArry[keyIndex].key,
-                    count: objArry[keyIndex].count + 1
+                if (keyName === "policyExpiringDate") {
+                    objArry[keyIndex] = {
+                        date: objArry[keyIndex].date,
+                        count: objArry[keyIndex].count + 1
+                    }
+                } else {
+                    objArry[keyIndex] = {
+                        insurer: objArry[keyIndex].insurer,
+                        count: objArry[keyIndex].count + 1
+                    }
                 }
-                // if (keyName === "policyExpiringDate") {
-                //     objArry[keyIndex] = {
-                //         date: objArry[keyIndex].date,
-                //         count: objArry[keyIndex].count + 1
-                //     }
-                // } else {
-                //     objArry[keyIndex] = {
-                //         insurer: objArry[keyIndex].insurer,
-                //         count: objArry[keyIndex].count + 1
-                //     }
-                // }
             }
         }
     }
