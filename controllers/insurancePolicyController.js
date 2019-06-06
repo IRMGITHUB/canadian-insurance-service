@@ -19,6 +19,7 @@ module.exports = {
     getExpiredIPLetterByBankNDate : getExpiredIPLetterByBankNDate,
     listBankIPLettersByBankNlimit : listBankIPLettersByBankNlimit,
     searchIPNoticesByBank : searchIPNoticesByBank,
+    downloadIpLettersByBank : downloadIpLettersByBank,
     uploadIpLetters : uploadIpLetters,
     updateUnmatchIPNotices: updateUnmatchIPNotices,
     listUnmatchedNotices : listUnmatchedNotices,
@@ -225,6 +226,23 @@ function searchIPNoticesByBank(req, res) {
       logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.SEARCH_IPNOTICES_BY_BANK, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.SEARCH_IPNOTICES_BY_BANK);
       utils.writeJson(res, response,constants.SUCCESS);
+    }).catch(function (response) {
+      utils.writeJson(res, response,constants.ERROR_CODE);
+    });
+  };
+
+ /**
+ *
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+function downloadIpLettersByBank(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.DOWNLOAD_IPLETTERS_BY_BANK);
+  insurancePolicyService.downloadIpLettersByBank(req,res).then(function (response) {
+      logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.DOWNLOAD_IPLETTERS_BY_BANK, constants.RESPONSE, response);
+      logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.DOWNLOAD_IPLETTERS_BY_BANK);
+      res.download(response.result.toString());
     }).catch(function (response) {
       utils.writeJson(res, response,constants.ERROR_CODE);
     });

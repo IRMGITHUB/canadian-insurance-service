@@ -31,6 +31,7 @@ module.exports = {
   getExpiredIPLetterByBankNDate: getExpiredIPLetterByBankNDate,
   listBankIPLettersByBankNlimit: listBankIPLettersByBankNlimit,
   searchIPNoticesByBank: searchIPNoticesByBank,
+  downloadIpLettersByBank : downloadIpLettersByBank,
   uploadIpLetters: uploadIpLetters,
   updateUnmatchIPNotices: updateUnmatchIPNotices,
   listUnmatchedNotices: listUnmatchedNotices,
@@ -65,7 +66,8 @@ function readDatafromLoanJson(req, res) {
     logger.info("req.body=========>", req.body);
     const loanJson = req.body;
     var transactionId = util.generateId(constants.TRANSACTION_ID);
-    var uniqueLoanId = "L-" + loanJson.bankName + "-" + loanJson.mortgageNumber;
+    //var uniqueLoanId = "L-" + loanJson.bankName + "-" + loanJson.mortgageNumber;
+    var uniqueLoanId = "L-" + util.generateId(constants.LOAN);
     loanJson["uniqueLoanId"] = uniqueLoanId;
     loanJson["schemaName"] = "Loan";
     loanJson["transaction"] = [{
@@ -746,6 +748,43 @@ async function searchIPNoticesByBank(req, res) {
     })
   }
 }
+/**
+ * This method will download Unmatched Ip Letters
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function downloadIpLettersByBank(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.DOWNLOAD_UNMATCHED_NOTICES);
+    try {
+      var peerName = util.getPeerName(req.auth.orgName);
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.downloadIpLettersByBank;
+      var bankId = req.auth.orgName;
+      var getIpLettersResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, ipLetterSchemaName,bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      logger.info("getIpLettersResp========>",getIpLettersResp);
+      if (getIpLettersResp.length > 0) {
+        var xls = json2xls(util.getResultArrayfromBlockChainResult(getIpLettersResp));
+        var fileName = uuidV1();
+        var filePath = configData.CANADIAN_INSURANCE_FILE_LOCATION + fileName + ".xlsx";
+        logger.info("filePath===========>", filePath);
+        fs.writeFileSync(filePath, xls, 'binary');
+        return ({
+          statusCode: constants.SUCCESS,
+          result: filePath,
+        });
+      } else
+        return ({
+          statusCode: constants.NO_CONTENT,
+          result: constants.MESSAGE_204
+        });
+    } catch (error) {
+      logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.DOWNLOAD_UNMATCHED_NOTICES, error);
+      return ({
+        code: constants.INTERNAL_SERVER_ERROR,
+        message: constants.MESSAGE_500
+      })
+    }
+  }
 
 /**
  * This method will upload IP letters by service provider IRM.
@@ -875,7 +914,8 @@ async function chainCodeCall(jsonFromXML, req, res) {
   var requestBody1 = JSON.parse(jsonFromXML).ipletter;
   logger.info("req.auth.orgName : , requestBody1.bankId :   ", req.auth.orgName, requestBody1.bankId);
   //if (req.auth.orgName == requestBody1.bankId.trim()) {
-  requestBody1["requestId"] = requestBody1.bankId + "-" + requestBody1.mortgageNumber;
+  //requestBody1["requestId"] = requestBody1.bankId + "-" + requestBody1.mortgageNumber;
+  requestBody1["requestId"] = "IP-"+util.generateId(constants.REQUEST_ID);
   requestBody1["schemaName"] = "IpLetter";
   requestBody1["transaction"] = [{
     "transactionId": transactionId,

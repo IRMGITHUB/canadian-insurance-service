@@ -833,6 +833,55 @@ paths:
             type: file
       x-swagger-router-controller: "insurancePolicyController" 
 
+  /downloadIpLettersByBank:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to download IP letters for bank"
+      operationId: "downloadIpLettersByBankOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "Get all IP letters by bank"
+      description: "This service is used to download IP letters for bank"
+      operationId: "downloadIpLettersByBank"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+
   /getIPNoticeRecvdSummary/{policyNumber}:
     options:
       tags:
