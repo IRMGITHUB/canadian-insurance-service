@@ -9,7 +9,7 @@
 	"channelName": "canadianinsurancechannel",
 	"chaincodes": {
 		"canadianInsuranceInfo": {
-			"name": "insurance_cc7",
+			"name": "insurance_cc8",
 			"version": "v0",
 			"functions": {
 				"addLoanInfo": "addLoan",
