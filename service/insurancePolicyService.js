@@ -492,7 +492,7 @@ async function getIpLetterDetailsByBankNDate(req, res) {
     else
       return ({
         statusCode: constants.NO_CONTENT,
-        result: MESSAGE_204
+        result: constants.MESSAGE_204
       });
   } catch (error) {
     logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPLETTER_DETAILS_BY_BANKNDATE, error);
@@ -575,7 +575,7 @@ async function getExpiringIpLetterDetailsByDateRange(req, res) {
     else
       return ({
         statusCode: constants.NO_CONTENT,
-        result: MESSAGE_204
+        result: constants.MESSAGE_204
       });
 
   } catch (error) {
@@ -667,7 +667,7 @@ async function getExpiredIPLetterByBankNDate(req, res) {
     else
       return ({
         statusCode: constants.NO_CONTENT,
-        result: MESSAGE_204
+        result: constants.MESSAGE_204
       });
   } catch (error) {
     logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE, error);
@@ -700,7 +700,7 @@ async function listBankIPLettersByBankNlimit(req, res) {
     else
       return ({
         statusCode: constants.NO_CONTENT,
-        result: MESSAGE_204
+        result: constants.MESSAGE_204
       });
   } catch (error) {
     logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_BANK_IPLETTERS_BY_BANK_N_LIMIT, error);
@@ -735,7 +735,7 @@ async function searchIPNoticesByBank(req, res) {
     else
       return ({
         statusCode: constants.NO_CONTENT,
-        result: MESSAGE_204
+        result: constants.MESSAGE_204
       });
   } catch (error) {
     logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IPNOTICES_BY_BANK, error);
@@ -1324,7 +1324,7 @@ async function listIPNoticesByInsurer(req, res) {
     else
       return ({
         statusCode: constants.NO_CONTENT,
-        result: MESSAGE_204
+        result: constants.MESSAGE_204
       });
   } catch (error) {
     logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.LIST_BANK_IPLETTERS_BY_BANK_N_LIMIT, error);
