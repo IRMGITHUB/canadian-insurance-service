@@ -951,7 +951,8 @@ async function chainCodeCall(jsonFromXML, req, res) {
       blockno: blockNumber,
       actor: req.auth.orgName,
       actorReference: requestBody1.insuranceProvider,
-      createdBy: req.auth.sub
+      createdBy: req.auth.sub,
+      referenceNumber: requestBody1.requestId
     }
     logger.info("reqTransactionData=========>", reqTransactionData);
     var transData = await transactionService.addTransaction(reqTransactionData);
@@ -1163,7 +1164,8 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
         blockno: blockNumber,
         actor: req.auth.persona,
         actorReference: requestId,
-        createdBy: req.auth.sub
+        createdBy: req.auth.sub,
+        referenceNumber: requestId
       }
       logger.info("reqTransactionData=========>", reqTransactionData);
       var transData = await transactionService.addTransaction(reqTransactionData);
