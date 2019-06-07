@@ -225,7 +225,8 @@ module.exports = {
 	"FIND_ALL_CONDTION_REPORTS": "findAllConditionReports",
 	"GRANT": "Grant",
 	"REVOKE": "Revoke",
-	"INVALID_USERID_PASSWORD": "Invalid User/Password"
+	"INVALID_USERID_PASSWORD": "Invalid User/Password",
+	"BANK_NAME" : "bankName"
 	
 
 

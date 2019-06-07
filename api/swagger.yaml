@@ -425,13 +425,13 @@ paths:
             type: file
       x-swagger-router-controller: "insurancePolicyController" 
 
-  /getExpiringIpLetterCountOfNdaysByInsurerNDate/{days}:
+  /getExpiringPoliciesCountOfNdaysByInsurerNDate/{days}:
     options:
       tags:
       - "Bank"
       summary: "Get success for options"
-      description: "This service is used to get IP notice count of insurer of coming n days"
-      operationId: "getExpiringIpLetterCountOfNdaysByInsurerNDateOptions"
+      description: "This service is used to get Loan count of insurer of coming n days"
+      operationId: "getExpiringPoliciesCountOfNdaysByInsurerNDateOptions"
       consumes:
       - "application/json"
       produces:
@@ -461,7 +461,7 @@ paths:
       - "Bank"
       summary: "Get IP notice count of insurer of coming n days."
       description: "This service used to  get Ip Notice count of insurer of coming n days."
-      operationId: "getExpiringIpLetterCountOfNdaysByInsurerNDate"
+      operationId: "getExpiringPoliciesCountOfNdaysByInsurerNDate"
       security:
         - Bearer: []
       consumes:
@@ -491,13 +491,13 @@ paths:
             type: file
       x-swagger-router-controller: "insurancePolicyController" 
       
-  /getExpiringIpLetterDetailsByDateRange/{insurerName}:
+  /getExpiringPoliciesDetailsByDateRange/{insurerName}:
     options:
       tags:
       - "Bank"
       summary: "Get success for options"
       description: "This service is used to get Ip notice details by insurer and in expire date range"
-      operationId: "getExpiringIpLetterDetailsByDateRangeOptions"
+      operationId: "getExpiringPoliciesDetailsByDateRangeOptions"
       consumes:
       - "application/json"
       produces:
@@ -527,7 +527,7 @@ paths:
       - "Bank"
       summary: "This service is used to get Ip notice details by insurer and in notice date range"
       description: "This service used to Ip notice details by insurer and in notice date range"
-      operationId: "getExpiringIpLetterDetailsByDateRange"
+      operationId: "getExpiringPoliciesDetailsByDateRange"
       security:
         - Bearer: []
       consumes:
@@ -558,13 +558,13 @@ paths:
       x-swagger-router-controller: "insurancePolicyController" 
 
   
-  /getExpiredIpCountOfLastNDaysByBankNDate/{days}:
+  /getExpiredPoliciesCountOfLastNDaysByBankNDate/{days}:
     options:
       tags:
       - "Bank"
       summary: "Get success for options"
       description: "This service is used to get All IP notices recevied"
-      operationId: "getExpiredIpCountOfLastNDaysByBankNDateOptions"
+      operationId: "getExpiredPoliciesCountOfLastNDaysByBankNDateOptions"
       consumes:
       - "application/json"
       produces:
@@ -594,7 +594,7 @@ paths:
       - "Bank"
       summary: "Get all IP notices received from service provider"
       description: "This service used to  get all IP notices received"
-      operationId: "getExpiredIpCountOfLastNDaysByBankNDate"
+      operationId: "getExpiredPoliciesCountOfLastNDaysByBankNDate"
       security:
         - Bearer: []
       consumes:
@@ -622,13 +622,13 @@ paths:
           description: "Validation exception"
       x-swagger-router-controller: "insurancePolicyController" 
 
-  /getExpiredIPLetterByBankNDate/{date}:
+  /getExpiredPoliciesByBankNDate/{date}:
     options:
       tags:
       - "Bank"
       summary: "Get success for options"
       description: "This service is used to get expired Ip letter by bank and date."
-      operationId: "getExpiredIPLetterByBankNDateOptions"
+      operationId: "getExpiredPoliciesByBankNDateOptions"
       consumes:
       - "application/json"
       produces:
@@ -658,7 +658,7 @@ paths:
       - "Bank"
       summary: "get expired Ip letter by bank and date"
       description: "This service used to  get expired Ip letter by bank and date"
-      operationId: "getExpiredIPLetterByBankNDate"
+      operationId: "getExpiredPoliciesByBankNDate"
       security:
         - Bearer: []
       consumes:
@@ -1632,13 +1632,13 @@ paths:
       x-swagger-router-controller: "insurancePolicyController" 
 
   
-  /getExpiredIpNoticeCountByDate/{days}:
+  /getExpiredPoliciesCountByDate/{days}:
     options:
       tags:
       - "Auditor"
       summary: "Get success for options"
       description: "This service is used to get expired IP notice count"
-      operationId: "getExpiredIpNoticeCountByDateOptions"
+      operationId: "getExpiredPoliciesCountByDateOptions"
       consumes:
       - "application/json"
       produces:
@@ -1668,7 +1668,7 @@ paths:
       - "Auditor"
       summary: "Get expired ip notice count"
       description: "This service used to  get expired ip notice count"
-      operationId: "getExpiredIpNoticeCountByDate"
+      operationId: "getExpiredPoliciesCountByDate"
       security:
         - Bearer: []
       consumes:
@@ -1696,13 +1696,13 @@ paths:
           description: "Validation exception"
       x-swagger-router-controller: "insurancePolicyController" 
 
-  /getExpiredIpNoticeByBankAndDate/{bankId}:
+  /getExpiredPoliciesByBankAndDate/{bankId}:
     options:
       tags:
       - "Auditor"
       summary: "Get success for options"
       description: "This service is used to get expired IP notice by bank and date"
-      operationId: "getExpiredIpNoticeByBankAndDateOptions"
+      operationId: "getExpiredPoliciesByBankAndDateOptions"
       consumes:
       - "application/json"
       produces:
@@ -1732,7 +1732,7 @@ paths:
       - "Auditor"
       summary: "Get expired IP notice by bank and date"
       description: "This service used to get expired IP notice by bank and date"
-      operationId: "getExpiredIpNoticeByBankAndDate"
+      operationId: "getExpiredPoliciesByBankAndDate"
       security:
         - Bearer: []
       consumes:

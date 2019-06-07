@@ -18,6 +18,8 @@ var moment = require('moment');
 var json2xls = require('json2xls');
 const testMode = configData.TEST_MODE;
 const ipLetterSchemaName = "IpLetter";
+const loanSchemaName = "Loan";
+const unMatchedVal = "Unmatched";
 
 module.exports = {
   readDatafromLoanJson: readDatafromLoanJson,
@@ -25,10 +27,10 @@ module.exports = {
   processIpLetters: processIpLetters,
   getIpLetterCountByBankNNoticeDate: getIpLetterCountByBankNNoticeDate,
   getIpLetterDetailsByBankNDate: getIpLetterDetailsByBankNDate,
-  getExpiringIpLetterCountOfNdaysByInsurerNDate: getExpiringIpLetterCountOfNdaysByInsurerNDate,
-  getExpiringIpLetterDetailsByDateRange: getExpiringIpLetterDetailsByDateRange,
-  getExpiredIpCountOfLastNDaysByBankNDate: getExpiredIpCountOfLastNDaysByBankNDate,
-  getExpiredIPLetterByBankNDate: getExpiredIPLetterByBankNDate,
+  getExpiringPoliciesCountOfNdaysByInsurerNDate: getExpiringPoliciesCountOfNdaysByInsurerNDate,
+  getExpiringPoliciesDetailsByDateRange: getExpiringPoliciesDetailsByDateRange,
+  getExpiredPoliciesCountOfLastNDaysByBankNDate: getExpiredPoliciesCountOfLastNDaysByBankNDate,
+  getExpiredPoliciesByBankNDate: getExpiredPoliciesByBankNDate,
   listBankIPLettersByBankNlimit: listBankIPLettersByBankNlimit,
   searchIPNoticesByBank: searchIPNoticesByBank,
   downloadIpLettersByBank : downloadIpLettersByBank,
@@ -43,8 +45,8 @@ module.exports = {
   getIpNoticeByBankAndNoticeDate: getIpNoticeByBankAndNoticeDate,
   getAuditorPoliciesExpiringCount: getAuditorPoliciesExpiringCount,
   getAuditorExpiringPoliciesByBank: getAuditorExpiringPoliciesByBank,
-  getExpiredIpNoticeCountByDate: getExpiredIpNoticeCountByDate,
-  getExpiredIpNoticeByBankAndDate: getExpiredIpNoticeByBankAndDate,
+  getExpiredPoliciesCountByDate: getExpiredPoliciesCountByDate,
+  getExpiredPoliciesByBankAndDate: getExpiredPoliciesByBankAndDate,
   auditorSearchIpLetterByBank : auditorSearchIpLetterByBank
 
 
@@ -348,7 +350,7 @@ async function processIpLetters(req, res) {
               var reqTransactionData = {
                 transactionId: ipletterupdateResp,
                 blockchainTimeStamp: timestamp,
-                transactionType: 'ProcessedfFailIpLetter',
+                transactionType: 'ProcessedFailIpLetter',
                 blockNo: blockNumber,
                 actor: req.auth.orgName,
                 actorReference: getIPletterMortgageNumberResp[0].Record.insuranceProvider, //loanJson.insuranceProvider,
@@ -389,7 +391,7 @@ async function processIpLetters(req, res) {
             var reqTransactionData = {
               transactionId: ipletterupdateResp,
               blockchainTimeStamp: timestamp,
-              transactionType: 'ProcessedfFailIpLetter',
+              transactionType: 'ProcessedFailIpLetter',
               blockNo: blockNumber,
               actor: req.auth.orgName,
               actorReference: getIPletterMortgageNumberResp[0].Record.insuranceProvider, //loanJson.insuranceProvider,
@@ -514,20 +516,20 @@ async function getIpLetterDetailsByBankNDate(req, res) {
  * @param {*} res 
  */
 
-async function getExpiringIpLetterCountOfNdaysByInsurerNDate(req, res) {
+async function getExpiringPoliciesCountOfNdaysByInsurerNDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRING_IPLETTER_COUNT_OFNDAYS_BY_INSURERNDATE);
   try {
 
     var daysValue = req.swagger.params['days'].value;
     var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpPoliciesExpiringByDateRangeAndBankId;
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLoanExpiringByDateRangeAndBankId;
     var dateFrom1 = moment().format('YYYY-MM-DD');
     var dateFrom = dateFrom1 + " 23:59:59";
     var dateTo1 = moment().add(parseInt(daysValue), 'days').format('YYYY-MM-DD');
     var dateTo = dateTo1 + " 23:59:59";
     logger.info('dateFrom : ,dateTo :  -----> ', dateFrom, dateTo);
     var bankId = req.auth.orgName;
-    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), ipLetterSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), loanSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
     var myObject = {};
     for (var i = 0; i < getIpLetterExpiredPoliciesByDateResp.length; i++) {
       var key = getIpLetterExpiredPoliciesByDateResp[i].Record.insuranceProvider
@@ -558,18 +560,18 @@ async function getExpiringIpLetterCountOfNdaysByInsurerNDate(req, res) {
  * @param {*} res 
  */
 
-async function getExpiringIpLetterDetailsByDateRange(req, res) {
+async function getExpiringPoliciesDetailsByDateRange(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRING_IPLETTER_DETAILS_BY_DATERANGE);
   try {
     var insurerName = req.swagger.params['insurerName'].value;
     var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpnoticebyExpireDateRangeAndInsurer;
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLoanByExpireDateRangeAndInsurer;
     var dateFrom1 = moment().format('YYYY-MM-DD');
     var dateFrom = dateFrom1 + " 00:00:00";
     var dateTo1 = moment().add(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
     var dateTo = dateTo1 + " 00:00:00";
     var bankId = req.auth.orgName;
-    var getIpLetterNoticeDateResp = await chaincodeService.queryChainCodeFiveArgs(req.auth.fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), insurerName.trim(), bankId, ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    var getIpLetterNoticeDateResp = await chaincodeService.queryChainCodeFiveArgs(req.auth.fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), insurerName.trim(), bankId, loanSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
     if (getIpLetterNoticeDateResp.length > 0)
       return ({
         statusCode: constants.SUCCESS,
@@ -599,11 +601,11 @@ async function getExpiringIpLetterDetailsByDateRange(req, res) {
  * @param {*} res 
  */
 
-async function getExpiredIpCountOfLastNDaysByBankNDate(req, res) {
+async function getExpiredPoliciesCountOfLastNDaysByBankNDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IP_COUNT_OF_LAST_NDAYS_BY_BANKNDATE);
   try {
     var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpPoliciesExpiringByDateRangeAndBankId;
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLaonByExpiringByDateRangeAndBankId;
     var noOfDays = req.swagger.params['days'].value;
     var fromExpiredDate1 = moment().subtract(noOfDays, 'days').format('YYYY-MM-DD');
     var fromExpiredDate = fromExpiredDate1 + " 23:59:59";
@@ -612,7 +614,7 @@ async function getExpiredIpCountOfLastNDaysByBankNDate(req, res) {
     logger.info("fromExpiredDate=========>", fromExpiredDate);
     logger.info("toExpiredDate=========>", toExpiredDate);
     var bankId = req.auth.orgName;
-    var getExpiredPolicyResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), ipLetterSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    var getExpiredPolicyResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), loanSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
     var myObject = {};
     for (var i = 0; i < getExpiredPolicyResp.length; i++) {
       var key = getExpiredPolicyResp[i].Record.policyExpiringDate;
@@ -651,7 +653,7 @@ async function getExpiredIpCountOfLastNDaysByBankNDate(req, res) {
  * @param {*} res 
  */
 
-async function getExpiredIPLetterByBankNDate(req, res) {
+async function getExpiredPoliciesByBankNDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE);
   try {
 
@@ -659,9 +661,9 @@ async function getExpiredIPLetterByBankNDate(req, res) {
     var dateValue = dateValue1 + " 23:59:59";
     logger.info('dateValue.....', dateValue);
     var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpExpiredPoliciesByDateAndBankId;
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLoanExpiredPoliciesDetailsByDateAndBankId;
     var bankId = req.auth.orgName;
-    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateValue.toString().trim(), ipLetterSchemaName, bankId, "", chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateValue.toString().trim(), loanSchemaName, bankId, "", chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
     if (getIpLetterExpiredPoliciesByDateResp.length > 0)
       return ({
         statusCode: constants.SUCCESS,
@@ -1200,7 +1202,7 @@ async function listUnmatchedNotices(req, res) {
     try {
       var peerName = util.getPeerName(req.auth.orgName);
       var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getListUnmatchedNotices;
-      var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, "", ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, unMatchedVal, ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       if (getUnmatchedResp.length > 0)
         return ({
           statusCode: constants.SUCCESS,
@@ -1488,11 +1490,11 @@ async function getAuditorPoliciesExpiringCount(req, res) {
       var dateTo = dateTo1 + " 23:59:59";
       logger.info(' time stamp dateFrom-----> ', dateFrom);
       logger.info('time stamp dateTo-----> ', dateTo);
-      var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, dateFrom.toString(), dateTo.toString(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, dateFrom.toString(), dateTo.toString(), loanSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       var myObject = {};
       for (var i = 0; i < getIpLetterExpiredPoliciesByDateResp.length; i++) {
-        var key = getIpLetterExpiredPoliciesByDateResp[i].Record.bankId
-        logger.info(getIpLetterExpiredPoliciesByDateResp[i].Record.bankId);
+        var key = getIpLetterExpiredPoliciesByDateResp[i].Record.bankName
+        logger.info(getIpLetterExpiredPoliciesByDateResp[i].Record.bankName);
         if (myObject.hasOwnProperty(key)) {
           myObject[key] += 1;
         } else {
@@ -1501,7 +1503,7 @@ async function getAuditorPoliciesExpiringCount(req, res) {
       }
       return ({
         statusCode: constants.SUCCESS,
-        result: util.convertData(getIpLetterExpiredPoliciesByDateResp, constants.BANK_ID)
+        result: util.convertData(getIpLetterExpiredPoliciesByDateResp, constants.BANK_NAME)
       });
     } catch (error) {
       logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_AUDITOR_POLICIES_EXPIRING_COUNT, error);
@@ -1530,14 +1532,14 @@ async function getAuditorExpiringPoliciesByBank(req, res) {
     try {
       var bankName = req.swagger.params['bank'].value;
       var peerName = util.getPeerName(req.auth.orgName);
-      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndExpireDate;
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLoanByBankIdAndExpireDate;
       var schemaName = "IpLetter";
       var n = constants.NO_OF_DAYS;
       var dateFrom1 = moment().format('YYYY-MM-DD');
       var dateFrom = dateFrom1 + " 23:59:59";
       var dateTo1 = moment().add(n, 'days').format('YYYY-MM-DD');
       var dateTo = dateTo1 + " 23:59:59";
-      var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateFrom.toString(), dateTo.toString(), bankName, ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateFrom.toString(), dateTo.toString(), bankName, loanSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       if (getIpLetterExpiredPoliciesByDateResp.length > 0)
         return ({
           statusCode: constants.SUCCESS,
@@ -1569,7 +1571,7 @@ async function getAuditorExpiringPoliciesByBank(req, res) {
  * @param {*} res 
  */
 
-async function getExpiredIpNoticeCountByDate(req, res) {
+async function getExpiredPoliciesCountByDate(req, res) {
 
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPNOTICE_COUNT_BY_DATE);
   if (req.auth.orgName == constants.AUDITOR || testMode) {
@@ -1583,11 +1585,11 @@ async function getExpiredIpNoticeCountByDate(req, res) {
       var toExpiredDate = toExpiredDate1 + " 23:59:59";
       logger.info("fromExpiredDate=========>", fromExpiredDate);
       logger.info("toExpiredDate=========>", toExpiredDate);
-      var getExpiredPolicyResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var getExpiredPolicyResp = await chaincodeService.queryChainCodeThreeArgs(req.auth.fabricToken, fromExpiredDate.toString().trim(), toExpiredDate.toString().trim(), loanSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       console.log('getExpiredPolicyResp-->', getExpiredPolicyResp);
       var myObject = {};
       for (var i = 0; i < getExpiredPolicyResp.length; i++) {
-        var key = getExpiredPolicyResp[i].Record.bankId;
+        var key = getExpiredPolicyResp[i].Record.bankName;
         if (myObject.hasOwnProperty(key)) {
           myObject[key] += 1;
         } else {
@@ -1598,7 +1600,7 @@ async function getExpiredIpNoticeCountByDate(req, res) {
         return ({
           statusCode: constants.SUCCESS,
           result: "Success",
-          result: util.convertData(getExpiredPolicyResp, constants.BANK_ID)
+          result: util.convertData(getExpiredPolicyResp, constants.BANK_NAME)
         });
       } else {
         return ({
@@ -1627,7 +1629,7 @@ async function getExpiredIpNoticeCountByDate(req, res) {
  * @param {*} res 
  */
 
-async function getExpiredIpNoticeByBankAndDate(req, res) {
+async function getExpiredPoliciesByBankAndDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IP_NOTICE_RECVD_SUMMARY);
   if (req.auth.orgName == constants.AUDITOR || testMode) {
     try {
@@ -1638,10 +1640,10 @@ async function getExpiredIpNoticeByBankAndDate(req, res) {
       var toExpiredDate = toExpiredDate1 + " 23:59:59";
       console.log('fromExpiredDate : toExpiredDate: ', fromExpiredDate, toExpiredDate);
       var peerName = util.getPeerName(req.auth.orgName);
-      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndExpireDate;
+      var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLaonByBankIdAndExpireDate;
       var bankId = req.swagger.params['bankId'].value; //req.auth.orgName;
       console.log('bankId--->', bankId);
-      var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString(), toExpiredDate.toString(), bankId.trim(), ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, fromExpiredDate.toString(), toExpiredDate.toString(), bankId.trim(), loanSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       console.log('getIpNoticeResp--->', getIpNoticeResp);
       if (getIpNoticeResp.length > 0)
         return ({

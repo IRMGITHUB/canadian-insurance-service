@@ -13,10 +13,10 @@ module.exports = {
     processIpLetters : processIpLetters,
     getIpLetterCountByBankNNoticeDate : getIpLetterCountByBankNNoticeDate,
     getIpLetterDetailsByBankNDate : getIpLetterDetailsByBankNDate,
-    getExpiringIpLetterCountOfNdaysByInsurerNDate : getExpiringIpLetterCountOfNdaysByInsurerNDate,
-    getExpiringIpLetterDetailsByDateRange : getExpiringIpLetterDetailsByDateRange,
-    getExpiredIpCountOfLastNDaysByBankNDate : getExpiredIpCountOfLastNDaysByBankNDate,
-    getExpiredIPLetterByBankNDate : getExpiredIPLetterByBankNDate,
+    getExpiringPoliciesCountOfNdaysByInsurerNDate : getExpiringPoliciesCountOfNdaysByInsurerNDate,
+    getExpiringPoliciesDetailsByDateRange : getExpiringPoliciesDetailsByDateRange,
+    getExpiredPoliciesCountOfLastNDaysByBankNDate : getExpiredPoliciesCountOfLastNDaysByBankNDate,
+    getExpiredPoliciesByBankNDate : getExpiredPoliciesByBankNDate,
     listBankIPLettersByBankNlimit : listBankIPLettersByBankNlimit,
     searchIPNoticesByBank : searchIPNoticesByBank,
     downloadIpLettersByBank : downloadIpLettersByBank,
@@ -31,12 +31,12 @@ module.exports = {
     getIpNoticeByBankAndNoticeDate : getIpNoticeByBankAndNoticeDate,
     getAuditorPoliciesExpiringCount : getAuditorPoliciesExpiringCount,
     getAuditorExpiringPoliciesByBank : getAuditorExpiringPoliciesByBank,
-    getExpiredIpNoticeCountByDate : getExpiredIpNoticeCountByDate,
-    getExpiredIpNoticeByBankAndDate : getExpiredIpNoticeByBankAndDate,
+    getExpiredPoliciesCountByDate : getExpiredPoliciesCountByDate,
+    getExpiredPoliciesByBankAndDate : getExpiredPoliciesByBankAndDate,
     auditorSearchIpLetterByBank : auditorSearchIpLetterByBank,
     addBankLoanInfoOptions:ipNoticesRecvdSummaryOptions,
     getExpiredPoliciesByDateOptions : ipNoticesRecvdSummaryOptions,
-    getExpiringIpLetterCountOfNdaysByInsurerNDateOptions : ipNoticesRecvdSummaryOptions,
+    getExpiringPoliciesCountOfNdaysByInsurerNDateOptions : ipNoticesRecvdSummaryOptions,
     getIpLetterDetailsByBankNDateOptions: ipNoticesRecvdSummaryOptions,
     processIpLettersOptions:ipNoticesRecvdSummaryOptions,
     getIpLetterCountByBankNNoticeDateOptions:ipNoticesRecvdSummaryOptions,
@@ -51,12 +51,12 @@ module.exports = {
     searchIPNoticesByInsurerOptions : ipNoticesRecvdSummaryOptions,
     getAuditorIpCountByNoticeDateOptions : ipNoticesRecvdSummaryOptions,
     getIpNoticeByBankAndNoticeDateOptions : ipNoticesRecvdSummaryOptions,
-    getExpiredIpNoticeCountByDateOptions : ipNoticesRecvdSummaryOptions,
-    getExpiredIpCountOfLastNDaysByBankNDateOptions : ipNoticesRecvdSummaryOptions,
+    getExpiredPoliciesCountByDateOptions : ipNoticesRecvdSummaryOptions,
+    getExpiredPoliciesCountOfLastNDaysByBankNDateOptions : ipNoticesRecvdSummaryOptions,
     getAuditorPoliciesExpiringCountOptions : ipNoticesRecvdSummaryOptions,
     getAuditorExpiringPoliciesByBankOptions : ipNoticesRecvdSummaryOptions,
     updateUnmatchIPNoticesOptions: ipNoticesRecvdSummaryOptions,
-    getExpiringIpLetterDetailsByDateRangeOptions : ipNoticesRecvdSummaryOptions,
+    getExpiringPoliciesDetailsByDateRangeOptions : ipNoticesRecvdSummaryOptions,
     auditorSearchIpLetterByBankOptions : ipNoticesRecvdSummaryOptions
 }
 
@@ -135,9 +135,9 @@ function getIpLetterDetailsByBankNDate(req, res) {
  * @param {*} req
  * @param {*} res
  */
-function getExpiringIpLetterCountOfNdaysByInsurerNDate(req, res) {
+function getExpiringPoliciesCountOfNdaysByInsurerNDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRING_IPLETTER_COUNT_OFNDAYS_BY_INSURERNDATE);
-  insurancePolicyService.getExpiringIpLetterCountOfNdaysByInsurerNDate(req,res).then(function (response) {
+  insurancePolicyService.getExpiringPoliciesCountOfNdaysByInsurerNDate(req,res).then(function (response) {
       logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRING_IPLETTER_COUNT_OFNDAYS_BY_INSURERNDATE, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRING_IPLETTER_COUNT_OFNDAYS_BY_INSURERNDATE);
       utils.writeJson(res, response,constants.SUCCESS);
@@ -152,9 +152,9 @@ function getExpiringIpLetterCountOfNdaysByInsurerNDate(req, res) {
  * @param {*} req
  * @param {*} res
  */
-function getExpiringIpLetterDetailsByDateRange(req, res) {
+function getExpiringPoliciesDetailsByDateRange(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRING_IPLETTER_DETAILS_BY_DATERANGE);
-  insurancePolicyService.getExpiringIpLetterDetailsByDateRange(req,res).then(function (response) {
+  insurancePolicyService.getExpiringPoliciesDetailsByDateRange(req,res).then(function (response) {
       logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRING_IPLETTER_DETAILS_BY_DATERANGE, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRING_IPLETTER_DETAILS_BY_DATERANGE);
       utils.writeJson(res, response,constants.SUCCESS);
@@ -169,9 +169,9 @@ function getExpiringIpLetterDetailsByDateRange(req, res) {
  * @param {*} req
  * @param {*} res
  */
-function getExpiredIpCountOfLastNDaysByBankNDate(req, res) {
+function getExpiredPoliciesCountOfLastNDaysByBankNDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IP_COUNT_OF_LAST_NDAYS_BY_BANKNDATE);
-  insurancePolicyService.getExpiredIpCountOfLastNDaysByBankNDate(req,res).then(function (response) {
+  insurancePolicyService.getExpiredPoliciesCountOfLastNDaysByBankNDate(req,res).then(function (response) {
       logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IP_COUNT_OF_LAST_NDAYS_BY_BANKNDATE, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IP_COUNT_OF_LAST_NDAYS_BY_BANKNDATE);
       utils.writeJson(res, response,constants.SUCCESS);
@@ -186,9 +186,9 @@ function getExpiredIpCountOfLastNDaysByBankNDate(req, res) {
  * @param {*} req
  * @param {*} res
  */
-function getExpiredIPLetterByBankNDate(req, res) {
+function getExpiredPoliciesByBankNDate(req, res) {
     logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE);
-    insurancePolicyService.getExpiredIPLetterByBankNDate(req,res).then(function (response) {
+    insurancePolicyService.getExpiredPoliciesByBankNDate(req,res).then(function (response) {
         logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE, constants.RESPONSE, response);
         logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE);
         utils.writeJson(res, response,constants.SUCCESS);
@@ -443,9 +443,9 @@ function getAuditorExpiringPoliciesByBank(req, res) {
  * @param {*} req
  * @param {*} res
  */
-function getExpiredIpNoticeCountByDate(req, res) {
+function getExpiredPoliciesCountByDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_COUNT_BY_DATE);
-  insurancePolicyService.getExpiredIpNoticeCountByDate(req,res).then(function (response) {
+  insurancePolicyService.getExpiredPoliciesCountByDate(req,res).then(function (response) {
       logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_COUNT_BY_DATE, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_COUNT_BY_DATE);
       utils.writeJson(res, response,constants.SUCCESS);
@@ -460,9 +460,9 @@ function getExpiredIpNoticeCountByDate(req, res) {
  * @param {*} req
  * @param {*} res
  */
-function getExpiredIpNoticeByBankAndDate(req, res) {
+function getExpiredPoliciesByBankAndDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_BY_BANKANDDATE);
-  insurancePolicyService.getExpiredIpNoticeByBankAndDate(req,res).then(function (response) {
+  insurancePolicyService.getExpiredPoliciesByBankAndDate(req,res).then(function (response) {
       logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_BY_BANKANDDATE, constants.RESPONSE, response);
       logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.GET_EXPIRED_IPNOTICE_BY_BANKANDDATE);
       utils.writeJson(res, response,constants.SUCCESS);
