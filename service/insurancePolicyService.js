@@ -119,7 +119,7 @@ async function addBankLoanInfo(req, res) {
           var blockNumber = blockData.header.number.toString();
           var reqTransactionData = {
             transactionId: getLoanResp,
-            blockchainTimeStamp: timestamp,
+            timeStamp: timestamp,
             transactionType: 'addLoan',
             blockNo: blockNumber,
             actor: req.auth.orgName,
@@ -222,7 +222,7 @@ async function processIpLetters(req, res) {
               var blockNumber = blockData.header.number.toString();
               var reqTransactionData = {
                 transactionId: ipletterupdateResp,
-                blockchainTimeStamp: timestamp,
+                timeStamp: timestamp,
                 transactionType: 'processingIpLetter',
                 blockNo: blockNumber,
                 actor: req.auth.orgName,
@@ -280,7 +280,7 @@ async function processIpLetters(req, res) {
                 var blockNumber = blockData.header.number.toString();
                 var reqTransactionData = {
                   transactionId: ipletterupdateResp1,
-                  blockchainTimeStamp: timestamp,
+                  timeStamp: timestamp,
                   transactionType: 'updatePolicydetails',
                   blockNo: blockNumber,
                   actor: req.auth.orgName,
@@ -312,7 +312,7 @@ async function processIpLetters(req, res) {
                   var blockNumber = blockData.header.number.toString();
                   var reqTransactionData = {
                     transactionId: ipletterupdateResp1,
-                    blockchainTimeStamp: timestamp,
+                    timeStamp: timestamp,
                     transactionType: 'processedIpLetter',
                     blockNo: blockNumber,
                     actor: req.auth.orgName,
@@ -349,7 +349,7 @@ async function processIpLetters(req, res) {
               var blockNumber = blockData.header.number.toString();
               var reqTransactionData = {
                 transactionId: ipletterupdateResp,
-                blockchainTimeStamp: timestamp,
+                timeStamp: timestamp,
                 transactionType: 'ProcessedFailIpLetter',
                 blockNo: blockNumber,
                 actor: req.auth.orgName,
@@ -390,7 +390,7 @@ async function processIpLetters(req, res) {
             var blockNumber = blockData.header.number.toString();
             var reqTransactionData = {
               transactionId: ipletterupdateResp,
-              blockchainTimeStamp: timestamp,
+              timeStamp: timestamp,
               transactionType: 'ProcessedFailIpLetter',
               blockNo: blockNumber,
               actor: req.auth.orgName,
@@ -946,7 +946,7 @@ async function chainCodeCall(jsonFromXML, req, res) {
     var blockNumber = blockData.header.number.toString();
     var reqTransactionData = {
       transactionId: insuranceFileResp,
-      dateTime: timestamp,
+      timeStamp: timestamp,
       transactionType: 'addIPLetter',
       blockno: blockNumber,
       actor: req.auth.orgName,
@@ -1159,7 +1159,7 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
       var blockNumber = blockData.header.number.toString();
       var reqTransactionData = {
         transactionId: ipletterupdateResp,
-        dateTime: timestamp,
+        timeStamp: timestamp,
         transactionType: 're-addIpLetter',
         blockno: blockNumber,
         actor: req.auth.persona,
