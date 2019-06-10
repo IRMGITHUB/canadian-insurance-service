@@ -19,7 +19,7 @@ var json2xls = require('json2xls');
 const testMode = configData.TEST_MODE;
 const ipLetterSchemaName = "IpLetter";
 const loanSchemaName = "Loan";
-const unMatchedVal = "Unmatched";
+const unMatchedVal = "UnMatched";
 
 module.exports = {
   readDatafromLoanJson: readDatafromLoanJson,
@@ -119,7 +119,7 @@ async function addBankLoanInfo(req, res) {
           var blockNumber = blockData.header.number.toString();
           var reqTransactionData = {
             transactionId: getLoanResp,
-            timeStamp: timestamp,
+            blockchainTimeStamp: timestamp,
             transactionType: 'addLoan',
             blockNo: blockNumber,
             actor: req.auth.orgName,
@@ -222,7 +222,7 @@ async function processIpLetters(req, res) {
               var blockNumber = blockData.header.number.toString();
               var reqTransactionData = {
                 transactionId: ipletterupdateResp,
-                timeStamp: timestamp,
+                blockchainTimeStamp: timestamp,
                 transactionType: 'processingIpLetter',
                 blockNo: blockNumber,
                 actor: req.auth.orgName,
@@ -280,7 +280,7 @@ async function processIpLetters(req, res) {
                 var blockNumber = blockData.header.number.toString();
                 var reqTransactionData = {
                   transactionId: ipletterupdateResp1,
-                  timeStamp: timestamp,
+                  blockchainTimeStamp: timestamp,
                   transactionType: 'updatePolicydetails',
                   blockNo: blockNumber,
                   actor: req.auth.orgName,
@@ -312,7 +312,7 @@ async function processIpLetters(req, res) {
                   var blockNumber = blockData.header.number.toString();
                   var reqTransactionData = {
                     transactionId: ipletterupdateResp1,
-                    timeStamp: timestamp,
+                    blockchainTimeStamp: timestamp,
                     transactionType: 'processedIpLetter',
                     blockNo: blockNumber,
                     actor: req.auth.orgName,
@@ -349,7 +349,7 @@ async function processIpLetters(req, res) {
               var blockNumber = blockData.header.number.toString();
               var reqTransactionData = {
                 transactionId: ipletterupdateResp,
-                timeStamp: timestamp,
+                blockchainTimeStamp: timestamp,
                 transactionType: 'ProcessedFailIpLetter',
                 blockNo: blockNumber,
                 actor: req.auth.orgName,
@@ -390,7 +390,7 @@ async function processIpLetters(req, res) {
             var blockNumber = blockData.header.number.toString();
             var reqTransactionData = {
               transactionId: ipletterupdateResp,
-              timeStamp: timestamp,
+              blockchainTimeStamp: timestamp,
               transactionType: 'ProcessedFailIpLetter',
               blockNo: blockNumber,
               actor: req.auth.orgName,
@@ -446,7 +446,12 @@ async function getIpLetterCountByBankNNoticeDate(req, res) {
       var noticeDate = noticeDate1 + " 00:00:00"
       logger.info("noticeDate=========>", noticeDate);
       result[i] = chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, noticeDate.toString().trim(), authOwnerId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      console.log(">>>>>>>>>>>>>>>>>result[i][count]>>>>>>>>>", result[i][count]);
+      if( result[i][count] ==0){
+          console.log("if part..........");
+      } else{
       awaitResults[i] = result[i];
+      }
     }
     var finalJson = await Promise.all(awaitResults).then((res) => {
       logger.info("final res=>", res);
@@ -946,7 +951,7 @@ async function chainCodeCall(jsonFromXML, req, res) {
     var blockNumber = blockData.header.number.toString();
     var reqTransactionData = {
       transactionId: insuranceFileResp,
-      timeStamp: timestamp,
+      dateTime: timestamp,
       transactionType: 'addIPLetter',
       blockno: blockNumber,
       actor: req.auth.orgName,
@@ -1112,7 +1117,7 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
   requestBody1["transaction"] = [{
     "transactionId": transactionId,
     "transactionTimeStamp": new Date(),
-    "transactionType": "re-addIpLetter",
+    "transactionType": "updateIpLetter",
     "actor": req.auth.orgName,
     "actorReference": requestBody1.insuranceProvider,
     "additionalTags": "",
@@ -1159,7 +1164,7 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
       var blockNumber = blockData.header.number.toString();
       var reqTransactionData = {
         transactionId: ipletterupdateResp,
-        timeStamp: timestamp,
+        dateTime: timestamp,
         transactionType: 're-addIpLetter',
         blockno: blockNumber,
         actor: req.auth.persona,
@@ -1242,7 +1247,7 @@ async function downloadUnmatchedNotices(req, res) {
     try {
       var peerName = util.getPeerName(req.auth.orgName);
       var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getListUnmatchedNotices;
-      var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, "", ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+      var getUnmatchedResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken,unMatchedVal, ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       if (getUnmatchedResp.length > 0) {
         var xls = json2xls(util.getResultArrayfromBlockChainResult(getUnmatchedResp));
         var fileName = uuidV1();
