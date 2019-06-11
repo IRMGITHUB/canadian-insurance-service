@@ -243,6 +243,64 @@ paths:
           description: "Validation exception"
       x-swagger-router-controller: "insurancePolicyController"
     
+  /getAllBankLoan:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to get all bank loan by bank "
+      operationId: "getAllBankLoanOptions"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "Get all IP notices received from service provider"
+      description: "This service is used to get all bank loan by bank"
+      operationId: "getAllBankLoan"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+        
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+
+
+
 
   /processIpLetters:
     options:
@@ -799,6 +857,84 @@ paths:
       summary: "search IP notices"
       description: "This service used to  search IP notices"
       operationId: "searchIPNoticesByBank"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attributeName"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attributeValue"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+          schema:
+            type: file
+      x-swagger-router-controller: "insurancePolicyController" 
+  
+  /searchPoliciesByBank/{attributeName}/{attributeValue}:
+    options:
+      tags:
+      - "Bank"
+      summary: "Get success for options"
+      description: "This service is used to search IP notices"
+      operationId: "searchPoliciesByBankOptions"
+      security:
+        - Bearer: []
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "attributeName"
+        in: "path"
+        description: "attribute/field Name"
+        required: true
+        type: "string"
+      - name: "attributeValue"
+        in: "path"
+        description: "attribute/field Value"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+        400:
+          description: "Invalid ID supplied"
+        404:
+          description: "Data not found"
+        405:
+          description: "Validation exception"
+      x-swagger-router-controller: "insurancePolicyController"
+    get:
+      tags:
+      - "Bank"
+      summary: "search IP notices"
+      description: "This service used to  search IP notices"
+      operationId: "searchPoliciesByBank"
       security:
         - Bearer: []
       consumes:
@@ -2050,6 +2186,8 @@ definitions:
         type: "string"
       policyStatus :
         type: "string" 
+      transactionType :
+        type: "string"
       transaction :
         type: "array"
         items:

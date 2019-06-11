@@ -33,6 +33,7 @@ module.exports = {
   getExpiredPoliciesByBankNDate: getExpiredPoliciesByBankNDate,
   listBankIPLettersByBankNlimit: listBankIPLettersByBankNlimit,
   searchIPNoticesByBank: searchIPNoticesByBank,
+  searchPoliciesByBank : searchPoliciesByBank,
   downloadIpLettersByBank : downloadIpLettersByBank,
   uploadIpLetters: uploadIpLetters,
   updateUnmatchIPNotices: updateUnmatchIPNotices,
@@ -47,7 +48,8 @@ module.exports = {
   getAuditorExpiringPoliciesByBank: getAuditorExpiringPoliciesByBank,
   getExpiredPoliciesCountByDate: getExpiredPoliciesCountByDate,
   getExpiredPoliciesByBankAndDate: getExpiredPoliciesByBankAndDate,
-  auditorSearchIpLetterByBank : auditorSearchIpLetterByBank
+  auditorSearchIpLetterByBank : auditorSearchIpLetterByBank,
+  getAllBankLoan: getAllBankLoan
 
 
 
@@ -119,7 +121,7 @@ async function addBankLoanInfo(req, res) {
           var blockNumber = blockData.header.number.toString();
           var reqTransactionData = {
             transactionId: getLoanResp,
-            blockchainTimeStamp: timestamp,
+            timeStamp: timestamp,
             transactionType: 'addLoan',
             blockNo: blockNumber,
             actor: req.auth.orgName,
@@ -222,7 +224,7 @@ async function processIpLetters(req, res) {
               var blockNumber = blockData.header.number.toString();
               var reqTransactionData = {
                 transactionId: ipletterupdateResp,
-                blockchainTimeStamp: timestamp,
+                timeStamp: timestamp,
                 transactionType: 'processingIpLetter',
                 blockNo: blockNumber,
                 actor: req.auth.orgName,
@@ -280,7 +282,7 @@ async function processIpLetters(req, res) {
                 var blockNumber = blockData.header.number.toString();
                 var reqTransactionData = {
                   transactionId: ipletterupdateResp1,
-                  blockchainTimeStamp: timestamp,
+                  timeStamp: timestamp,
                   transactionType: 'updatePolicydetails',
                   blockNo: blockNumber,
                   actor: req.auth.orgName,
@@ -312,7 +314,7 @@ async function processIpLetters(req, res) {
                   var blockNumber = blockData.header.number.toString();
                   var reqTransactionData = {
                     transactionId: ipletterupdateResp1,
-                    blockchainTimeStamp: timestamp,
+                    timeStamp: timestamp,
                     transactionType: 'processedIpLetter',
                     blockNo: blockNumber,
                     actor: req.auth.orgName,
@@ -333,7 +335,7 @@ async function processIpLetters(req, res) {
             getIPletterMortgageNumberResp[0].Record.transaction.push({
               "transactionId": transactionId,
               "transactionTimeStamp": new Date(),
-              "transactionType": "ProcessedfFailIpLetter",
+              "transactionType": "ProcessedFailIpLetter",
               "actor": req.auth.orgName,
               "actorReference": getIPletterMortgageNumberResp[0].Record.insuranceProvider,
               "additionalTags": "",
@@ -349,7 +351,7 @@ async function processIpLetters(req, res) {
               var blockNumber = blockData.header.number.toString();
               var reqTransactionData = {
                 transactionId: ipletterupdateResp,
-                blockchainTimeStamp: timestamp,
+                timeStamp: timestamp,
                 transactionType: 'ProcessedFailIpLetter',
                 blockNo: blockNumber,
                 actor: req.auth.orgName,
@@ -374,7 +376,7 @@ async function processIpLetters(req, res) {
           getIPletterMortgageNumberResp[0].Record.transaction.push({
             "transactionId": transactionId,
             "transactionTimeStamp": new Date(),
-            "transactionType": "ProcessedfFailIpLetter",
+            "transactionType": "ProcessedFailIpLetter",
             "actor": req.auth.orgName,
             "actorReference": getIPletterMortgageNumberResp[0].Record.insuranceProvider,
             "additionalTags": "",
@@ -390,7 +392,7 @@ async function processIpLetters(req, res) {
             var blockNumber = blockData.header.number.toString();
             var reqTransactionData = {
               transactionId: ipletterupdateResp,
-              blockchainTimeStamp: timestamp,
+              timeStamp: timestamp,
               transactionType: 'ProcessedFailIpLetter',
               blockNo: blockNumber,
               actor: req.auth.orgName,
@@ -446,16 +448,22 @@ async function getIpLetterCountByBankNNoticeDate(req, res) {
       var noticeDate = noticeDate1 + " 00:00:00"
       logger.info("noticeDate=========>", noticeDate);
       result[i] = chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, noticeDate.toString().trim(), authOwnerId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
-      console.log(">>>>>>>>>>>>>>>>>result[i][count]>>>>>>>>>", result[i][count]);
-      if( result[i][count] ==0){
-          console.log("if part..........");
-      } else{
       awaitResults[i] = result[i];
-      }
+      
     }
     var finalJson = await Promise.all(awaitResults).then((res) => {
-      logger.info("final res=>", res);
-      return res;
+      // logger.info("final res=>", res);
+      // console.log("res.count==========>",res.count);
+      // return res;
+      var jsonArray=[];
+      for(var attributename in res){
+        if(res[attributename].count!=0)
+        {
+          jsonArray.push({date: res[attributename].date, count: res[attributename].count});
+        }
+       
+    }
+      return jsonArray;
     });
     if (finalJson) {
       return ({
@@ -755,6 +763,45 @@ async function searchIPNoticesByBank(req, res) {
     })
   }
 }
+
+
+
+/**
+ * This method will Search Loan by bank.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function searchPoliciesByBank(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IPNOTICES_BY_BANK);
+  try {
+    var peerName = util.getPeerName(req.auth.orgName);
+    var attributeName = req.swagger.params['attributeName'].value;
+    var attributeValue = req.swagger.params['attributeValue'].value;
+    var bankId = req.auth.orgName;
+    logger.info("attributeName==attributeValue==", attributeName, "=attributeValue=", attributeValue);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.searchPoliciesByBank;
+    var getIpNoticeResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, attributeName, attributeValue, loanSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if (getIpNoticeResp.length > 0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: util.getResultArrayfromBlockChainResult(getIpNoticeResp)
+      });
+    else
+      return ({
+        statusCode: constants.NO_CONTENT,
+        result: constants.MESSAGE_204
+      });
+  } catch (error) {
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.SEARCH_IPNOTICES_BY_BANK, error);
+    return ({
+      code: constants.INTERNAL_SERVER_ERROR,
+      message: constants.MESSAGE_500
+    })
+  }
+}
+
+
 /**
  * This method will download Unmatched Ip Letters
  * @param {*} req 
@@ -951,7 +998,7 @@ async function chainCodeCall(jsonFromXML, req, res) {
     var blockNumber = blockData.header.number.toString();
     var reqTransactionData = {
       transactionId: insuranceFileResp,
-      dateTime: timestamp,
+      timeStamp: timestamp,
       transactionType: 'addIPLetter',
       blockno: blockNumber,
       actor: req.auth.orgName,
@@ -1147,7 +1194,7 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
     getIpLetterReqIdResp[0].Record.transaction.push({
     "transactionId": transactionId,
     "transactionTimeStamp": new Date(),
-    "transactionType": "re-addIpLetter",
+    "transactionType":"updateIpLetter",
     "actor": req.auth.orgName,
     "actorReference": requestBody1.insuranceProvider,
     "additionalTags": "",
@@ -1164,8 +1211,8 @@ async function updateChainCodeCall(jsonFromXML, req, res) {
       var blockNumber = blockData.header.number.toString();
       var reqTransactionData = {
         transactionId: ipletterupdateResp,
-        dateTime: timestamp,
-        transactionType: 're-addIpLetter',
+        timeStamp: timestamp,
+        transactionType: 'updateIpLetter',
         blockno: blockNumber,
         actor: req.auth.persona,
         actorReference: requestId,
@@ -1713,54 +1760,34 @@ async function auditorSearchIpLetterByBank(req, res) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
- * This method will get expired policy
+ * This method will get expired IP lettter by bank 
+ * and expire date.
  * @param {*} req 
  * @param {*} res 
  */
 
-async function ipNoticesSummary(req, res) {
-  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.IP_NOTICES_SUMMARY);
+async function getAllBankLoan(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE);
   try {
-    return ({
-      statusCode: constants.SUCCESS,
-      result: constants.SUCCESS
-    });
+    logger.info("get all bank loan info...");
+    var peerName = util.getPeerName(req.auth.orgName);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getAllBankLoan;
+    var bankId = req.auth.orgName;
+    logger.info("get all bank loan info..bankId: ", bankId);
+    var getBankLoanResp = await chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken,loanSchemaName,bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if (getBankLoanResp.length > 0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: util.getResultArrayfromBlockChainResult(getBankLoanResp)
+      });
+    else
+      return ({
+        statusCode: constants.NO_CONTENT,
+        result: constants.MESSAGE_204
+      });
   } catch (error) {
-    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.IP_NOTICES_SUMMARY, error);
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRED_IPLETTER_BY_BANK_N_DATE, error);
     return ({
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500
