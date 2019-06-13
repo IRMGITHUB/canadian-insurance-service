@@ -35,6 +35,7 @@ module.exports = {
     getExpiredPoliciesCountByDate : getExpiredPoliciesCountByDate,
     getExpiredPoliciesByBankAndDate : getExpiredPoliciesByBankAndDate,
     auditorSearchIpLetterByBank : auditorSearchIpLetterByBank,
+    auditorSearchPoliciesByBank : auditorSearchPoliciesByBank,
     addBankLoanInfoOptions:ipNoticesRecvdSummaryOptions,
     getExpiredPoliciesByDateOptions : ipNoticesRecvdSummaryOptions,
     getExpiringPoliciesCountOfNdaysByInsurerNDateOptions : ipNoticesRecvdSummaryOptions,
@@ -60,6 +61,7 @@ module.exports = {
     updateUnmatchIPNoticesOptions: ipNoticesRecvdSummaryOptions,
     getExpiringPoliciesDetailsByDateRangeOptions : ipNoticesRecvdSummaryOptions,
     auditorSearchIpLetterByBankOptions : ipNoticesRecvdSummaryOptions,
+    auditorSearchPoliciesByBankOptions : ipNoticesRecvdSummaryOptions,
     getAllBankLoan: getAllBankLoan,
     getAllBankLoanOptions: ipNoticesRecvdSummaryOptions
 }
@@ -532,7 +534,23 @@ function auditorSearchIpLetterByBank(req, res) {
     });
   };
 
-
+  
+ /**
+ *
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+function auditorSearchPoliciesByBank(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.AUDITOR_SEARCH_POLICIES_BY_BANK);
+  insurancePolicyService.auditorSearchPoliciesByBank(req,res).then(function (response) {
+      logHelper.logDebug(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.AUDITOR_SEARCH_POLICIES_BY_BANK, constants.RESPONSE, response);
+      logHelper.logMethodExit(logger, constants.INSURANCE_POLICY_CONTROLLER_FILE, constants.AUDITOR_SEARCH_POLICIES_BY_BANK);
+      utils.writeJson(res, response,constants.SUCCESS);
+    }).catch(function (response) {
+      utils.writeJson(res, response,constants.ERROR_CODE);
+    });
+  };
 
 
 /**

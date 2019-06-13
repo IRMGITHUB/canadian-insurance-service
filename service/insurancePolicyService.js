@@ -49,7 +49,8 @@ module.exports = {
   getExpiredPoliciesCountByDate: getExpiredPoliciesCountByDate,
   getExpiredPoliciesByBankAndDate: getExpiredPoliciesByBankAndDate,
   auditorSearchIpLetterByBank : auditorSearchIpLetterByBank,
-  getAllBankLoan: getAllBankLoan
+  getAllBankLoan: getAllBankLoan,
+  auditorSearchPoliciesByBank : auditorSearchPoliciesByBank
 
 
 
@@ -1751,6 +1752,43 @@ async function auditorSearchIpLetterByBank(req, res) {
       });
   } catch (error) {
     logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.AUDITOR_SEARCH_IPLETTER_BY_BANK, error);
+    return ({
+      code: constants.INTERNAL_SERVER_ERROR,
+      message: constants.MESSAGE_500
+    })
+  }
+}
+
+
+
+/**
+ * This method will Search Polices by auditor.
+ * @param {*} req 
+ * @param {*} res 
+ */
+
+async function auditorSearchPoliciesByBank(req, res) {
+  logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.AUDITOR_SEARCH_POLICIES_BY_BANK);
+  try {
+    var peerName = util.getPeerName(req.auth.orgName);
+    var attributeName = req.swagger.params['attributeName'].value;
+    var attributeValue = req.swagger.params['attributeValue'].value;
+    var bankId = req.swagger.params['bankId'].value;
+    logger.info("attributeName==attributeValue==", attributeName, "=attributeValue=", attributeValue);
+    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.searchPoliciesByBank;
+    var getPolicesResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, attributeName, attributeValue, loanSchemaName, bankId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+    if (getPolicesResp.length > 0)
+      return ({
+        statusCode: constants.SUCCESS,
+        result: util.getResultArrayfromBlockChainResult(getPolicesResp)
+      });
+    else
+      return ({
+        statusCode: constants.NO_CONTENT,
+        result: constants.MESSAGE_204
+      });
+  } catch (error) {
+    logHelper.logError(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.AUDITOR_SEARCH_POLICIES_BY_BANK, error);
     return ({
       code: constants.INTERNAL_SERVER_ERROR,
       message: constants.MESSAGE_500

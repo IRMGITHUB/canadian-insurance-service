@@ -189,6 +189,7 @@ module.exports = {
 	"SEARCH_IPNOTICES_BY_BANK" : "searchIPNoticesByBank",
 	"search_Policies_By_Bank" : "searchPoliciesByBank",
 	"AUDITOR_SEARCH_IPLETTER_BY_BANK" : "auditorSearchIpLetterByBank",
+	"AUDITOR_SEARCH_POLICIES_BY_BANK" : "auditorSearchPoliciesByBank",
 	"SEARCH_IP_NOTICES_BY_INSURER" : "searchIPNoticesByInsurer",
 	"LIST_IPNOTICES_BY_INSURER" : "listIPNoticesByInsurer",
 	"UPDATE_UNMATCH_IPNOTICES" : "updateUnmatchIPNotices",
