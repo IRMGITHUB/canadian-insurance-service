@@ -217,6 +217,7 @@ module.exports = {
 	"NO_OF_DAYS" : "7",
 	"INSURANCE_PROVIDER" : "insuranceProvider",
 	"POLICY_EXPIRING_DATE" : "policyExpiringDate",
+	"NOTICE_DATE" : "noticeDate",
     "BANK_ID" : "bankId",
 	"INSURANCE_POLICY_SERVICE_FILE": "insurancePolicyService",
 	"GET_ALL_ART_IMAGE_JSON": "getallArtImageJson",
