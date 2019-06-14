@@ -440,22 +440,43 @@ async function getIpLetterCountByBankNNoticeDate(req, res) {
   try {
     var noOfDays = req.swagger.params['days'].value;
     var peerName = util.getPeerName(req.auth.orgName);
-    var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterCountByNoticeDateAndBankId;
-    var result = [];
-    var awaitResults = [];
-    var authOwnerId = req.auth.orgName;
-    for (var i = 0; i < noOfDays; i++) {
+    var fromDate = moment().subtract(0, 'days').format('YYYY-MM-DD') + " 00:00:00";
+    var toDate = moment().subtract(noOfDays, 'days').format('YYYY-MM-DD') + " 00:00:00";
+   // var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpLetterCountByNoticeDateAndBankId;
+   var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndNoticeDate;
+   var authOwnerId = req.auth.orgName;
+   var getIpLetterDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, toDate.toString().trim(), fromDate.toString().trim(), authOwnerId , ipLetterSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
+   console.log("getIpLetterDateResp=========>",getIpLetterDateResp);
+   var myObject = {};
+    for (var i = 0; i < getIpLetterDateResp.length; i++) {
+      var key = getIpLetterDateResp[i].Record.noticeDate;
+      if (myObject.hasOwnProperty(key)) {
+        myObject[key] += 1;
+      } else {
+        myObject[key] = 1;
+      }
+    }
+    if (myObject) {
+      return ({
+        statusCode: constants.SUCCESS,
+        result: "Success",
+        result: util.convertData(getIpLetterDateResp, constants.NOTICE_DATE)
+      });
+    } else {
+      return ({
+        statusCode: constants.INTERNAL_SERVER_ERROR,
+        result: constants.MESSAGE_500
+      });
+
+    }
+    /*for (var i = 0; i < noOfDays; i++) {
       var noticeDate1 = moment().subtract(i, 'days').format('YYYY-MM-DD');
       var noticeDate = noticeDate1 + " 00:00:00"
       logger.info("noticeDate=========>", noticeDate);
       result[i] = chaincodeService.queryChainCodeTwoArgs(req.auth.fabricToken, noticeDate.toString().trim(), authOwnerId, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       awaitResults[i] = result[i];
-      
     }
     var finalJson = await Promise.all(awaitResults).then((res) => {
-      // logger.info("final res=>", res);
-      // console.log("res.count==========>",res.count);
-      // return res;
       var jsonArray=[];
       for(var attributename in res){
         if(res[attributename].count!=0)
@@ -465,7 +486,7 @@ async function getIpLetterCountByBankNNoticeDate(req, res) {
        
     }
       return jsonArray;
-    });
+    });*/
     if (finalJson) {
       return ({
         statusCode: constants.SUCCESS,
