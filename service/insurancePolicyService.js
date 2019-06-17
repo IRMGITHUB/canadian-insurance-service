@@ -282,7 +282,7 @@ async function processIpLetters(req, res) {
                 var timestamp = blockData.data.data[0].payload.header.channel_header.timestamp;
                 var blockNumber = blockData.header.number.toString();
                 var reqTransactionData = {
-                  transactionId: ipletterupdateResp1,
+                  transactionId: loanupdateResp,
                   timeStamp: timestamp,
                   transactionType: 'updatePolicydetails',
                   blockNo: blockNumber,
