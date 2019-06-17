@@ -549,7 +549,7 @@ paths:
             type: file
       x-swagger-router-controller: "insurancePolicyController" 
       
-  /getExpiringPoliciesDetailsByDateRange/{insurerName}:
+  /getExpiringPoliciesDetailsByDateRange/{insurerName}/{days}:
     options:
       tags:
       - "Bank"
@@ -570,6 +570,11 @@ paths:
         description: "insurerName to get IP notice"
         required: true
         type: "string" 
+      - name: "days"
+        in: "path"
+        description: "days"
+        required: true
+        type: "string"
       responses:
         200:
           description: "successful operation"
@@ -601,7 +606,12 @@ paths:
         in: "path"
         description: "insurerName to get IP notice"
         required: true
-        type: "string"  
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
+        required: true
+        type: "string"
       responses:
         200:
           description: "successful operation"
@@ -1571,7 +1581,7 @@ paths:
           description: "Validation exception"
       x-swagger-router-controller: "insurancePolicyController" 
 
-  /getIpNoticeByBankAndNoticeDate/{bankId}:
+  /getIpNoticeByBankAndNoticeDate/{bankId}/{days}:
     options:
       tags:
       - "Auditor"
@@ -1592,6 +1602,11 @@ paths:
         description: "bankId"
         required: true
         type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get IP Letter"
+        required: true
+        type: "string" 
       responses:
         200:
           description: "successful operation"
@@ -1624,6 +1639,11 @@ paths:
         description: "bankId"
         required: true
         type: "string"
+      - name: "days"
+        in: "path"
+        description: "days to get IP Letter"
+        required: true
+        type: "string" 
       responses:
         200:
           description: "successful operation"
@@ -1701,7 +1721,7 @@ paths:
             type: file
       x-swagger-router-controller: "insurancePolicyController"
 
-  /getAuditorExpiringPoliciesByBank/{bank}:
+  /getAuditorExpiringPoliciesByBank/{bank}/{days}:
     options:
       tags:
       - "Auditor"
@@ -1720,6 +1740,11 @@ paths:
       - name: "bank"
         in: "path"
         description: "bank id to get expired policy"
+        required: true
+        type: "string" 
+      - name: "days"
+        in: "path"
+        description: "days to get expired policy"
         required: true
         type: "string" 
       responses:
@@ -1752,6 +1777,11 @@ paths:
       - name: "bank"
         in: "path"
         description: "bank id to get expired policy"
+        required: true
+        type: "string" 
+      - name: "days"
+        in: "path"
+        description: "days to get expired policy"
         required: true
         type: "string" 
       responses:
@@ -1832,7 +1862,7 @@ paths:
           description: "Validation exception"
       x-swagger-router-controller: "insurancePolicyController" 
 
-  /getExpiredPoliciesByBankAndDate/{bankId}:
+  /getExpiredPoliciesByBankAndDate/{bankId}/{days}:
     options:
       tags:
       - "Auditor"
@@ -1851,6 +1881,11 @@ paths:
       - name: "bankId"
         in: "path"
         description: "bankId"
+        required: true
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
         required: true
         type: "string"
       responses:
@@ -1883,6 +1918,11 @@ paths:
       - name: "bankId"
         in: "path"
         description: "bankId"
+        required: true
+        type: "string"
+      - name: "days"
+        in: "path"
+        description: "days"
         required: true
         type: "string"
       responses:

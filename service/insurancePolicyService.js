@@ -13,7 +13,6 @@ const chaincodeName = configData.chaincodes.canadianInsuranceInfo.name;
 var JSZip = require("jszip");
 var convert = require('xml-js');
 const uuidV1 = require('uuid/v1');
-const getAllIpNoticeDay = constants.NO_OF_DAYS;
 var moment = require('moment');
 var json2xls = require('json2xls');
 const testMode = configData.TEST_MODE;
@@ -599,11 +598,12 @@ async function getExpiringPoliciesDetailsByDateRange(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_EXPIRING_IPLETTER_DETAILS_BY_DATERANGE);
   try {
     var insurerName = req.swagger.params['insurerName'].value;
+    var noOfDays = req.swagger.params['days'].value;
     var peerName = util.getPeerName(req.auth.orgName);
     var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLoanByExpireDateRangeAndInsurer;
     var dateFrom1 = moment().format('YYYY-MM-DD');
     var dateFrom = dateFrom1 + " 00:00:00";
-    var dateTo1 = moment().add(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
+    var dateTo1 = moment().add(noOfDays, 'days').format('YYYY-MM-DD');
     var dateTo = dateTo1 + " 00:00:00";
     var bankId = req.auth.orgName;
     var getIpLetterNoticeDateResp = await chaincodeService.queryChainCodeFiveArgs(req.auth.fabricToken, dateFrom.toString().trim(), dateTo.toString().trim(), insurerName.trim(), bankId, loanSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
@@ -1514,9 +1514,10 @@ async function getIpNoticeByBankAndNoticeDate(req, res) {
   logHelper.logMethodEntry(logger, constants.INSURANCE_POLICY_SERVICE_FILE, constants.GET_IPNOTICE_BY_BANK_AND_NOTICEDATE);
   if (req.auth.orgName == constants.AUDITOR || testMode) {
     try {
-      var fromExpiredDate1 = moment().subtract(getAllIpNoticeDay, 'days').format('YYYY-MM-DD');
+      var noOfdays = req.swagger.params['days'].value; 
+      var fromExpiredDate1 = moment().subtract(noOfdays, 'days').format('YYYY-MM-DD');
       var fromExpiredDate = fromExpiredDate1 + " 00:00:00";
-      var toExpiredDate1 = moment().subtract(1, 'days').format('YYYY-MM-DD');
+      var toExpiredDate1 = moment().subtract(0, 'days').format('YYYY-MM-DD');
       var toExpiredDate = toExpiredDate1 + " 00:00:00"
       var peerName = util.getPeerName(req.auth.orgName);
       var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getIpNoticeByBankIdAndNoticeDate;
@@ -1607,13 +1608,12 @@ async function getAuditorExpiringPoliciesByBank(req, res) {
   if (req.auth.orgName == constants.AUDITOR || testMode) {
     try {
       var bankName = req.swagger.params['bank'].value;
+      var days = req.swagger.params['days'].value;
       var peerName = util.getPeerName(req.auth.orgName);
       var chaincodeFunctionName = configData.chaincodes.canadianInsuranceInfo.functions.getLoanByBankIdAndExpireDate;
-      var schemaName = "IpLetter";
-      var n = constants.NO_OF_DAYS;
       var dateFrom1 = moment().format('YYYY-MM-DD');
       var dateFrom = dateFrom1 + " 23:59:59";
-      var dateTo1 = moment().add(n, 'days').format('YYYY-MM-DD');
+      var dateTo1 = moment().add(days, 'days').format('YYYY-MM-DD');
       var dateTo = dateTo1 + " 23:59:59";
       var getIpLetterExpiredPoliciesByDateResp = await chaincodeService.queryChainCodeFourArgs(req.auth.fabricToken, dateFrom.toString(), dateTo.toString(), bankName, loanSchemaName, chaincodeName, chaincodeFunctionName, peerName, req.auth.persona.toLowerCase(), req.auth.orgName);
       if (getIpLetterExpiredPoliciesByDateResp.length > 0)
