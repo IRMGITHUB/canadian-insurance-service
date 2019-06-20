@@ -2314,7 +2314,7 @@ definitions:
         type: "string"
       policyStatus :
         type: "string" 
-      transactionType :
+      ipTransactionType :
         type: "string"
       transaction :
         type: "array"
