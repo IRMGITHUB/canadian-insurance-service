@@ -259,7 +259,7 @@ async function processIpLetters(req, res) {
               getMortgageNumberResp[0].Record.policyExpiringdate = getIPletterMortgageNumberResp[0].Record.policyExpiringdate;
               getMortgageNumberResp[0].Record.loanAmount = getIPletterMortgageNumberResp[0].Record.loanAmount;
               getMortgageNumberResp[0].Record.insuredvalue = getIPletterMortgageNumberResp[0].Record.insuredvalue;
-              getMortgageNumberResp[0].Record.propertyID = getIPletterMortgageNumberResp[0].Record.propertyID;
+              //getMortgageNumberResp[0].Record.propertyID = getIPletterMortgageNumberResp[0].Record.propertyID;
               var transactionId = util.generateId(constants.TRANSACTION_ID);
 
               getMortgageNumberResp[0].Record.transaction.push({
